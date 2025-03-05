@@ -9,7 +9,6 @@
 function output = vector2matlab(file_path, out_path)
 
     % Path for All Instantenious Snapshots for Specified Conditions.
-%     addpath('/Users/zeinsadek/Desktop/Experiments/PIV/Processing/readimx-v2.1.8-osx/');
     file_name   = dir([file_path,'/*.vc7']); 
 
     % Check if Input is Readable
@@ -24,7 +23,6 @@ function output = vector2matlab(file_path, out_path)
             fprintf('<vector2matlab> *Save Folder was Previously Created. \n')
         else
             fprintf('<vector2matlab> *Creating New Save Folder. \n')
-            %mkdir(out_path);
         end
 
         % Define Image Depth/Length [L] from First Frame.
@@ -46,12 +44,13 @@ function output = vector2matlab(file_path, out_path)
             UF = data.Frames{1,1}.Components{U0_index,1}.Scale.Slope.*data.Frames{1,1}.Components{U0_index,1}.Planes{1,1} + data.Frames{1,1}.Components{U0_index,1}.Scale.Offset;
             VF = data.Frames{1,1}.Components{V0_index,1}.Scale.Slope.*data.Frames{1,1}.Components{V0_index,1}.Planes{1,1} + data.Frames{1,1}.Components{V0_index,1}.Scale.Offset;
     
-            output.U(:, :, frame_number) =  UF;
-            output.V(:, :, frame_number) =  VF;        
+            % Transpose to orient correctly
+            output.U(:, :, frame_number) =  UF.';
+            output.V(:, :, frame_number) =  VF.';        
     
         end
         
-        %%% Statistical Filtering in Time
+    %%% Statistical Filtering in Time
     dirty_U_time_mean = mean(output.U, 3, 'omitnan');
     dirty_V_time_mean = mean(output.V, 3, 'omitnan');
 
@@ -82,7 +81,7 @@ function output = vector2matlab(file_path, out_path)
     end
     
         % Add Image/Data Parameters to struct file.
-        nf = size(output.U);
+        nf = size(UF);
         x = data.Frames{1,1}.Scales.X.Slope.*linspace(1, nf(1), nf(1)).*data.Frames{1,1}.Grids.X + data.Frames{1,1}.Scales.X.Offset;
         y = data.Frames{1,1}.Scales.Y.Slope.*linspace(1, nf(2), nf(2)).*data.Frames{1,1}.Grids.Y + data.Frames{1,1}.Scales.Y.Offset;
         [X, Y] = meshgrid(x, y);

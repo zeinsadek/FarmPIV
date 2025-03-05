@@ -15,8 +15,8 @@ fprintf("All Paths Imported...\n\n");
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Data paths
-project_path   = '/Volumes/Farm/PIV/PSU_Farm_Single_Farm_Date=20240811';
-recording_name = 'Plane_1_Recording_3';
+project_path   = '/Volumes/ZeinResults/Farm2Farm/Oldenburg_SingleFarm';
+recording_name = 'Plane_2_Recording_3';
 processing     = 'TR_PIV_MPd(2x32x32_50%ov_ImgCorr)_GPU';
 inpt_name      = recording_name;
 
@@ -25,15 +25,10 @@ inpt_name      = recording_name;
 piv_path = fullfile(project_path, recording_name, processing);
 
 % Save paths
-results_path = '/Volumes/ATHENA/TurbulenceClass';
+results_path = '/Volumes/ZeinResults/Farm2Farm/results';
 mtlb_file    = fullfile(results_path, 'data'   , strcat(inpt_name, '_DATA.mat'));
 mean_file    = fullfile(results_path, 'means'  , strcat(inpt_name, '_MEANS.mat'));
 figure_file  = fullfile(results_path, 'figures');
-
-% Make specific folder for figures of an experiment
-% if ~exist(figure_file, 'dir')
-%     mkdir(figure_file)
-% end
 
 if ~exist(fullfile(results_path, 'data'), 'dir')
     mkdir(fullfile(results_path, 'data'))
@@ -52,7 +47,7 @@ else
 end
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% MATLAB DATA TO ENSEMBLE/PHASE MEANS
+% MATLAB DATA TO ENSEMBLE MEANS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 if exist(mean_file, 'file')
@@ -70,11 +65,9 @@ end
 clc;
 
 % Coordinates
-X = means.X.';
-Y = means.Y.';
-
-% Zero to center turbine
-% Y = Y - 1125;
+D = 80;
+X = (means.X + 200) / D;
+Y = (means.Y + 940) / D;
 
 % Means
 U = means.u;
@@ -87,11 +80,10 @@ uv = means.uv;
 
 %% Means Plots
 
-r = 20;
-c_center_wake = 403;
-c_aisle = 307;
-c_edge = 130;
+xLower = -4.5;
+xUpper = 14;
 
+close all
 ax = figure();
 t  = tiledlayout(1,2);
 sgtitle(inpt_name, 'interpreter', 'none')
@@ -100,13 +92,11 @@ ax1 = nexttile();
 hold on
 colormap(ax1, jet)
 contourf(X, Y, U, 500, 'linestyle', 'none')
-% scatter3(X(r,c_center_wake), Y(r,c_center_wake), 0, 50, 'k', 'filled')
-% scatter3(X(r,c_aisle), Y(r,c_aisle), 0, 50, 'k', 'filled')
-% scatter3(X(r,c_edge), Y(r,c_edge), 0, 50, 'k', 'filled')
 axis equal
-xlim([-120,120])
-ylim([-1300,150])
-caxis([-1, 8])
+ylim([xLower,xUpper])
+xlim([1,4])
+yticks(-3:3:xUpper)
+clim([1, 8])
 colorbar()
 title('u')
 hold off
@@ -116,14 +106,15 @@ hold on
 colormap(ax2, coolwarm);
 contourf(X, Y, V, 500, 'linestyle', 'none')
 axis equal
-xlim([-120,120])
-ylim([-1300,150])
-caxis([-0.4, 0.4])
+ylim([xLower,xUpper])
+xlim([1,4])
+yticks(-3:3:xUpper)
+clim([-0.4, 0.4])
 colorbar()
 title('v')
 hold off
 
-exportgraphics(t, fullfile(figure_file, strcat(recording_name, '_U_V.png')), 'resolution', 300)
+% exportgraphics(t, fullfile(figure_file, strcat(recording_name, '_U_V.png')), 'resolution', 300)
 
 
 
@@ -138,8 +129,9 @@ nexttile()
 colormap jet
 contourf(X, Y, uu, 500, 'linestyle', 'none')
 axis equal
-xlim([-120,120])
-ylim([-1300,150])
+ylim([xLower,xUpper])
+xlim([1,4])
+yticks(-3:3:xUpper)
 colorbar()
 title('uu')
 
@@ -147,8 +139,9 @@ nexttile()
 colormap jet
 contourf(X, Y, vv, 500, 'linestyle', 'none')
 axis equal
-xlim([-120,120])
-ylim([-1300,150])
+ylim([xLower,xUpper])
+xlim([1,4])
+yticks(-3:3:xUpper)
 colorbar()
 title('vv')
 
@@ -157,56 +150,57 @@ nexttile()
 colormap jet
 contourf(X, Y, uv, 500, 'linestyle', 'none')
 axis equal
-xlim([-120,120])
-ylim([-1300,150])
+ylim([xLower,xUpper])
+xlim([1,4])
+yticks(-3:3:xUpper)
 colorbar()
 title('uv')
 
 %% Convergence in Means
 
-clc;
-N      = data.D;
-step   = 50;
-groups = 1:step:N;
-avgs_wake  = zeros(size(groups));
-avgs_aisle = zeros(size(groups));
-avgs_edge  = zeros(size(groups));
-avgs_all   = zeros(size(groups));
-
-c = 1;
-for i = step:step:N
-    disp(i)
-    % Wake
-    avgs_wake(c) = mean(data.U(r, c_center_wake, 1:i), 'omitnan');
-    
-    % Aisle
-    avgs_aisle(c) = mean(data.U(r, c_aisle, 1:i), 'omitnan');
-    
-    % Edge
-    avgs_edge(c) = mean(data.U(r, c_edge, 1:i), 'omitnan');
-    
-    % All
-    avgs_all(c) = mean(data.U(:, :, 1:i), 'all', 'omitnan');
-    c = c + 1;
-end
-
-%% Plot Convergence
-
-ls = 2;
-figure();
-hold on
-plot(groups, avgs_wake, 'displayname', 'Wake', 'linewidth', ls)
-plot(groups, avgs_aisle, 'displayname', 'Aisle', 'linewidth', ls)
-plot(groups, avgs_edge, 'displayname', 'Edge', 'linewidth', ls)
-plot(groups, avgs_all, 'displayname', 'All', 'linewidth', ls)
-hold off
-
-legend()
-xlim([step, means.D - 2 * step]);
-ylim([0, 10]);
-xlabel('Num Images');
-ylabel('Mean [m/s]');
-title('Convergence')
+% clc;
+% N      = data.D;
+% step   = 50;
+% groups = 1:step:N;
+% avgs_wake  = zeros(size(groups));
+% avgs_aisle = zeros(size(groups));
+% avgs_edge  = zeros(size(groups));
+% avgs_all   = zeros(size(groups));
+% 
+% c = 1;
+% for i = step:step:N
+%     disp(i)
+%     % Wake
+%     avgs_wake(c) = mean(data.U(r, c_center_wake, 1:i), 'omitnan');
+% 
+%     % Aisle
+%     avgs_aisle(c) = mean(data.U(r, c_aisle, 1:i), 'omitnan');
+% 
+%     % Edge
+%     avgs_edge(c) = mean(data.U(r, c_edge, 1:i), 'omitnan');
+% 
+%     % All
+%     avgs_all(c) = mean(data.U(:, :, 1:i), 'all', 'omitnan');
+%     c = c + 1;
+% end
+% 
+% %% Plot Convergence
+% 
+% ls = 2;
+% figure();
+% hold on
+% plot(groups, avgs_wake, 'displayname', 'Wake', 'linewidth', ls)
+% plot(groups, avgs_aisle, 'displayname', 'Aisle', 'linewidth', ls)
+% plot(groups, avgs_edge, 'displayname', 'Edge', 'linewidth', ls)
+% plot(groups, avgs_all, 'displayname', 'All', 'linewidth', ls)
+% hold off
+% 
+% legend()
+% xlim([step, means.D - 2 * step]);
+% ylim([0, 10]);
+% xlabel('Num Images');
+% ylabel('Mean [m/s]');
+% title('Convergence')
 
 
 

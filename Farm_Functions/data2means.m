@@ -38,9 +38,9 @@ function output = data2means(out_path, inst_struct, depth)
     output.v = mean(inst_v, 3, 'omitnan');
 
     % Create Reynolds Stress Objects
-    uu_p = zeros(length(y(1,:)), length(x(:,1)), D);
-    vv_p = zeros(length(y(1,:)), length(x(:,1)), D);
-    uv_p = zeros(length(y(1,:)), length(x(:,1)), D);
+    uu_p = zeros(size(inst_u));
+    vv_p = zeros(size(inst_u));
+    uv_p = zeros(size(inst_u));
 
     % Loop Through Each Frame in Struct.
     fprintf('\n<data2means> PROGRESS: ');
@@ -65,13 +65,10 @@ function output = data2means(out_path, inst_struct, depth)
 
     end
     
-    
-
     % Mean Stresses.
     output.uu = mean(uu_p, 3, 'omitnan');
     output.vv = mean(vv_p, 3, 'omitnan');
     output.uv = mean(uv_p, 3, 'omitnan');
-
     
     output.X = x;
     output.Y = y;
