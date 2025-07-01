@@ -11,18 +11,19 @@
 clc; clear; close all;
 addpath('/Users/zeinsadek/Desktop/Experiments/PIV/Processing/Farm/Farm_Functions');
 addpath('/Users/zeinsadek/Desktop/Experiments/PIV/Processing/readimx-v2.1.8-osx');
-addpath('/Users/zeinsadek/Desktop/Experiments/PIV/Processing/colormaps');
+addpath('/Users/zeinsadek/Documents/MATLAB/colormaps');
 fprintf("All Paths Imported...\n\n");
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % DATA + SAVE PATHS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-plane = "Plane_3";
+experiment = 'Farm2Farm_40D_Gap';
+plane = "Plane_9";
 
-results_path = "/Volumes/ZeinResults/Farm2Farm/results";
-data_path = fullfile(results_path, "data");
-combined_path = fullfile(results_path, "combined");
+results_path = fullfile("/Users/zeinsadek/Library/Mobile Documents/com~apple~CloudDocs/Data/Farm");
+data_path = fullfile(results_path, "data", experiment);
+combined_path = fullfile(results_path, "combined", experiment);
 combined_name = strcat(plane, "_COMBINED.mat");
 
 if ~exist(combined_path, "dir")

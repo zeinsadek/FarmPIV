@@ -46,7 +46,7 @@ function output = vector2matlab(file_path, out_path)
     
             % Transpose to orient correctly
             output.U(:, :, frame_number) =  UF.';
-            output.V(:, :, frame_number) =  VF.';        
+            output.V(:, :, frame_number) =  -VF.';        
     
         end
         
@@ -86,7 +86,7 @@ function output = vector2matlab(file_path, out_path)
         y = data.Frames{1,1}.Scales.Y.Slope.*linspace(1, nf(2), nf(2)).*data.Frames{1,1}.Grids.Y + data.Frames{1,1}.Scales.Y.Offset;
         [X, Y] = meshgrid(x, y);
         output.X = X;
-        output.Y = Y;
+        output.Y = -Y;
         output.D = D;
         
         % Save Matlab File.
