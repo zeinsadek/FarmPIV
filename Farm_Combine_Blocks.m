@@ -8,13 +8,12 @@ addpath('/Users/zeinsadek/Desktop/Experiments/PIV/Processing/readimx-v2.1.8-osx'
 addpath('/Users/zeinsadek/Documents/MATLAB/colormaps');
 fprintf("All Paths Imported...\n\n");
 
-
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % LOAD DATA
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Data path
-mat_path = '/Users/zeinsadek/Library/Mobile Documents/com~apple~CloudDocs/Data/Farm/blocks/Farm2Farm_20D_Gap';
+mat_path = '/Users/zeinsadek/Library/Mobile Documents/com~apple~CloudDocs/Data/Farm/blocks/Farm2Farm_10D_Gap';
 blocks = [1,2,3];
 
 % Figure path

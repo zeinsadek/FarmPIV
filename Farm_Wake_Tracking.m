@@ -22,7 +22,7 @@ fprintf("All Paths Imported...\n\n");
 project_folder = '/Users/zeinsadek/Library/Mobile Documents/com~apple~CloudDocs/Data/Farm';
 data_folder = '/Users/zeinsadek/Library/Mobile Documents/com~apple~CloudDocs/Data/Farm/data';
 experiment  = 'SingleFarm';
-recording   = 'Plane_2_Recording_3';
+recording   = 'Plane_1_Recording_1';
 
 % Load PIV
 data_path = fullfile(data_folder, experiment, strcat(recording, '_DATA.mat'));
@@ -252,6 +252,33 @@ for turbine = 1:5
 end
 
 clear turbine center_gaussian center_minimum frame gaussian_spike_index minimum_spike_index
+
+
+%% Contour + Centers (for paper)
+
+frame = 30;
+
+close all;
+figure('color', 'white')
+hold on
+contourf(X/D, Y/D, U(:,:,frame), 20, 'linestyle', 'none')
+
+for turbine = 1:5
+    plot(x/D, filtered_tracking(turbine).center_minimum(frame, :)/D, 'color', 'red', 'linewidth', 2)
+end
+hold off
+
+axis equal
+set(gca, 'YDir', 'reverse')
+xlim([1,4])
+ylim([-12, 4.5])
+
+xticks(1:4)
+yticks(-12:3:3)
+
+xlabel('$x / D$', 'interpreter', 'latex')
+ylabel('$z / D$', 'interpreter', 'latex')
+
 
 %% Plot: time series
 

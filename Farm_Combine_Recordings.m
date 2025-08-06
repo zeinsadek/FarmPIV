@@ -18,7 +18,7 @@ fprintf("All Paths Imported...\n\n");
 % DATA + SAVE PATHS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-experiment = 'Farm2Farm_40D_Gap';
+experiment = 'Farm2Farm_10D_Gap';
 plane = "Plane_9";
 
 results_path = fullfile("/Users/zeinsadek/Library/Mobile Documents/com~apple~CloudDocs/Data/Farm");

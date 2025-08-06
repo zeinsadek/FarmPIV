@@ -106,6 +106,7 @@ end
 X = X(top_crop_index:bottom_crop_index, left_crop_index:right_crop_index);
 Y = Y(top_crop_index:bottom_crop_index, left_crop_index:right_crop_index);
 x = X(1,:);
+y = Y(:,1);
 
 % Crop ensemble
 components = {'u', 'v', 'uu', 'vv', 'uv'};
@@ -139,7 +140,7 @@ clear bottom_crop bottom_crop_index components
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Load data for turbine that will be referenced
-reference_turbine = 1;
+reference_turbine = 4;
 
 % Double check FPS
 num_images = data(1).D;
@@ -151,7 +152,7 @@ time = linspace(0, dt * num_images, num_images);
 target_angles = -15:15:15;
 
 % What allowable tolerance for binning +/- [deg]
-tolerance = 3;
+tolerance = 5;
 
 % Colors
 colors = parula(length(target_angles));
@@ -243,7 +244,7 @@ clear coefficients detected_images dt h lower_bound upper_bound mask reference_t
 clear wake_angles slopes target_angle total_num_images
 
 
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % WAKE TRAJECTORY BINNING 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
@@ -264,7 +265,54 @@ end
 % PLOT PHASE AVERAGE QUANTITIES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-component = 'u';
+% component = 'u';
+% 
+% clc; close all;
+% figure('color', 'white')
+% tiledlayout(1, length(target_angles))
+% for angle_enumerate = 1:length(target_angles)
+% 
+%     target_angle = target_angles(angle_enumerate);
+% 
+%     h(angle_enumerate) = nexttile;
+%     hold on
+% 
+%     % Plotting phase aveage quantities
+%     contourf(X / D, Y / D, phase_average(angle_enumerate).(component), 100, 'linestyle', 'none')
+% 
+%     % Plot phase average minus ensemble average
+%     % contourf(X / D, Y / D, phase_average(angle_enumerate).(component) - ensemble.(component), 100, 'linestyle', 'none')
+% 
+%     % Center shift
+%     center_shift = -9 + Sy * (reference_turbine - 1);
+%     plot(x / D, (x / D) .* tand(target_angle) + center_shift, 'color', 'black')
+%     hold off
+%     axis equal
+%     yticks(-12:3:3)
+%     colorbar()
+%     set(gca, 'YDir', 'reverse')
+%     clim([2, 7])
+%     colormap(coolwarm)
+% 
+%     clear angle_enumerate
+% end
+% 
+% % Find all axes in the current figure
+% ax = findall(gcf, 'Type', 'axes');
+% 
+% % Collect all color limits
+% clims = cell2mat(get(ax, 'CLim'));
+% global_clim = [min(clims(:,1)), max(clims(:,2))];
+% 
+% % Apply global color limits
+% set(ax, 'CLim', global_clim);
+% 
+% clear target_angle
+
+
+%% Center line detection for phase average
+
+contour_component = 'uv';
 
 clc; close all;
 figure('color', 'white')
@@ -276,64 +324,102 @@ for angle_enumerate = 1:length(target_angles)
     h(angle_enumerate) = nexttile;
     hold on
    
+    phase_averaged_u = phase_average(angle_enumerate).u;
+
     % Plotting phase aveage quantities
-    contourf(X / D, Y / D, phase_average(angle_enumerate).(component), 100, 'linestyle', 'none')
-    
-    % Plot phase average minus ensemble average
-    % contourf(X / D, Y / D, phase_average(angle_enumerate).(component) - ensemble.(component), 100, 'linestyle', 'none')
+    contourf(X / D, Y / D, phase_average(angle_enumerate).(contour_component), 100, 'linestyle', 'none')
+
+    % Find center line
+    for turbine = 1:5
+        % Crop just to turbine
+        turbine_top_bound = -10.5 + Sy * (turbine - 1);
+        turbine_bottom_bound = turbine_top_bound + Sy;
+
+        fprintf('Turbine %1.0f: [%2.1f, %2.1f]\n', turbine, turbine_top_bound, turbine_bottom_bound)
+
+        % Find indicies to crop to
+        [~, turbine_top_bound_index] = min(abs(Y(:,1) / D - turbine_top_bound));
+        [~, turbine_bottom_bound_index] = min(abs(Y(:,1) / D - turbine_bottom_bound));
+        cropped_snapshot = phase_averaged_u(turbine_top_bound_index:turbine_bottom_bound_index, :);
+        cropped_X = X(turbine_top_bound_index:turbine_bottom_bound_index, :);
+        cropped_Y = Y(turbine_top_bound_index:turbine_bottom_bound_index, :);
+        cropped_y = cropped_Y(:,1);
+
+        %%% Part 1: Track minimum velocity
+        [tst, min_velocity_indicies] = min(cropped_snapshot, [], 1);
+
+        plot(X(1,:) / D, cropped_y(min_velocity_indicies) / D, 'color', 'black', 'linewidth', 3)
+
+    end
 
     % Center shift
-    center_shift = -9 + Sy * (reference_turbine - 1);
+    center_shift = -9 + Sy * (reference_turbine - 1); 
+
     plot(x / D, (x / D) .* tand(target_angle) + center_shift, 'color', 'black')
     hold off
     axis equal
-    % clim([-1, 1])
     yticks(-12:3:3)
     colorbar()
     set(gca, 'YDir', 'reverse')
+    clim([-0.8, 0.8])
+    % clim([0, 2.5])
+    colormap(coolwarm)
 
     clear angle_enumerate
 end
 
+% Find all axes in the current figure
+ax = findall(gcf, 'Type', 'axes');
+
+% Collect all color limits
+clims = cell2mat(get(ax, 'CLim'));
+global_clim = [min(clims(:,1)), max(clims(:,2))];
+
+% Apply global color limits
+set(ax, 'CLim', global_clim);
+
 clear target_angle
+
+
+
+
 
 %% Plot the wake trajectories of the masked frames
 
-
-angle_index = 1;
-target_angle = target_angles(angle_index);
-
-clc; close all
-figure()
-tiledlayout(5,1)
-
-for turbine = 1:5
-    h(turbine) = nexttile;
-    hold on
-    for recording = 1:3
-        % Center shift
-        center_shift = -9 + Sy * (turbine - 1);
-        centers = tracking(recording).filtered(turbine).center_minimum/D - center_shift;
-        mask = masks(recording, angle_index).phase;
-        x = tracking(1).x;
-
-        plot(x / D, centers(mask,:), 'color', 'black')
-        plot(x / D, mean(centers(mask,:), 'omitnan'), 'color', 'blue', 'linewidth', 3)
-    end
-
-    if turbine == reference_turbine
-        plot(x / D, tand(target_angle) .* (x / D) - (tand(target_angle)), 'color', 'red', 'linewidth', 3)
-    end
-    hold off
-    axis equal
-    title(sprintf('Turbine %1.0f', turbine))
-    ylabel('$z / D$', 'interpreter', 'latex')
-    xlim([1, 4])
-    ylim([-Sy/2, Sy/2])
-
-end
-
-linkaxes(h, 'xy')
+% angle_index = 1;
+% target_angle = target_angles(angle_index);
+% 
+% clc; close all
+% figure()
+% tiledlayout(5,1)
+% 
+% for turbine = 1:5
+%     h(turbine) = nexttile;
+%     hold on
+%     for recording = 1:3
+%         % Center shift
+%         center_shift = -9 + Sy * (turbine - 1);
+%         centers = tracking(recording).filtered(turbine).center_minimum/D - center_shift;
+%         mask = masks(recording, angle_index).phase;
+%         x = tracking(1).x;
+% 
+%         plot(x / D, centers(mask,:), 'color', 'black')
+%         plot(x / D, mean(centers(mask,:), 'omitnan'), 'color', 'blue', 'linewidth', 3)
+%     end
+% 
+%     if turbine == reference_turbine
+%         plot(x / D, tand(target_angle) .* (x / D) - (tand(target_angle)), 'color', 'red', 'linewidth', 3)
+%     end
+%     hold off
+%     axis equal
+%     title(sprintf('Turbine %1.0f', turbine))
+%     ylabel('$z / D$', 'interpreter', 'latex')
+%     xlim([1, 4])
+%     ylim([-Sy/2, Sy/2])
+% 
+% end
+% 
+% linkaxes(h, 'xy')
 
 
 

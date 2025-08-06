@@ -18,7 +18,7 @@ fprintf("All Paths Imported...\n\n");
 % Data path
 experiments = {'SingleFarm', 'Farm2Farm_10D_Gap', 'Farm2Farm_20D_Gap', 'Farm2Farm_40D_Gap'};
 % experiments = {'SingleFarm', 'Farm2Farm_20D_Gap', 'Farm2Farm_40D_Gap'};
-blocks = [1];
+blocks = [1, 2, 3];
 
 % Paths
 blocks_path = fullfile('/Users/zeinsadek/Library/Mobile Documents/com~apple~CloudDocs/Data/Farm/blocks');
@@ -64,7 +64,7 @@ stop = 10;
 step = 1;
 
 % Which component to plot
-component = 'uv';
+component = 'u';
 
 % Automatically select which block
 if start == 1

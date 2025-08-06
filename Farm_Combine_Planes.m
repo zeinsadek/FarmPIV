@@ -13,8 +13,8 @@ fprintf("All Paths Imported...\n\n");
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Data path
-experiment = 'Farm2Farm_40D_Gap';
-block = 3;
+experiment = 'Farm2Farm_10D_Gap';
+block = 1;
 
 if block == 1
     planes = {'Plane_1_COMBINED', 'Plane_2_COMBINED', 'Plane_3_COMBINED'};
@@ -114,7 +114,6 @@ combined.X = combined.X + offset;
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % PLOT
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 
 component = 'u';
 

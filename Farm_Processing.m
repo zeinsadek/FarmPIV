@@ -15,17 +15,17 @@ fprintf("All Paths Imported...\n\n");
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Data paths
-experiment = 'Farm2Farm_40D_Gap';
+experiment = 'Inflow';
 recording_name = 'Plane_9_Recording_3';
 
-project_path   = fullfile('/Volumes/Frm2FrmProc/', experiment, 'Oldenburg_Farm2Farm_40D_Gap_Block3');
+project_path   = fullfile('/Volumes/Frm2FrmProc/', experiment, 'Oldenburg_Inflow');
 processing     = 'TR_PIV_MPd(2x32x32_50%ov_ImgCorr)_GPU';
 inpt_name      = recording_name;
 
 
 % Image paths
-piv_path = fullfile(project_path, recording_name, 'ImageCorrection', processing);
-% piv_path = fullfile(project_path, recording_name, processing);
+% piv_path = fullfile(project_path, recording_name, 'ImageCorrection', processing);
+piv_path = fullfile(project_path, recording_name, processing);
 
 % Save paths
 results_path = '/Users/zeinsadek/Library/Mobile Documents/com~apple~CloudDocs/Data/Farm';

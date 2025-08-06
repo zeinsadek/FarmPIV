@@ -17,7 +17,6 @@ fprintf("All Paths Imported...\n\n");
 % INPUT PARAMETERS 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-
 % Data paths
 data_folder = '/Users/zeinsadek/Library/Mobile Documents/com~apple~CloudDocs/Data/Farm/data';
 experiment  = 'SingleFarm';
@@ -95,7 +94,7 @@ cropped_X = X(turbine_top_bound_index:turbine_bottom_bound_index, :);
 cropped_Y = Y(turbine_top_bound_index:turbine_bottom_bound_index, :);
 
 %% Try blurring it a little
-snapshot_blurred = imgaussfilt(snapshot, 1);
+snapshot_blurred = smoothdata(snapshot, 'gaussian', 8);
 
 % Plot to compare
 figure()
