@@ -107,12 +107,12 @@ clear f index label location nfft noverlap PSD signal St window x_location x_loc
 
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SPECTRA OF ALL TURBINES AT FIXED X-LOCATION
+% SPECTRA OF ALL TURBINES AT FIXED X-LOCATION (AVG OF PSDS)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 % Where to probe for signals
-x_location = 4;
+x_location = 1;
 [~, index] = min(abs(x  - x_location));
 
 % Tuning PSD parameters
@@ -120,7 +120,7 @@ window = hamming(round(num_images / 4));
 noverlap = round(0.5 * length(window));
 nfft = 2^nextpow2(length(window));
 
-clc; close all
+% clc; close all
 figure('color', 'white')
 title(sprintf('$x/ D = %2.0f$', x_location), 'Interpreter', 'latex')
 hold on
@@ -166,6 +166,129 @@ legend('location', 'northeast', 'interpreter', 'latex')
 xlabel('Strouhal Number')
 ylabel('Power Spectral Density')
 grid on
+
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% SPECTRA OF ALL TURBINES AT FIXED X-LOCATION (APPENDING SIGNALS)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+% Where to probe for signals
+x_location = 4;
+[~, index] = min(abs(x  - x_location));
+
+% Tuning PSD parameters
+window = hamming(round(3 * num_images / 12));
+% window = hamming(num_images);
+noverlap = round(0.5 * length(window));
+nfft = 2^nextpow2(length(window));
+
+% clc; close all
+figure('color', 'white')
+title(sprintf('$x/ D = %2.0f$', x_location), 'Interpreter', 'latex')
+hold on
+% Loop through turbines
+for turbine = 1:5
+
+    % Label turbine
+    label = sprintf('Turbine %1.0f', turbine);
+
+    % Append signals
+    signal = [tracking(1).raw(turbine).center_minimum(:, index); tracking(2).raw(turbine).center_minimum(:, index); tracking(3).raw(turbine).center_minimum(:, index)];
+
+    disp((-9  + 3 * (turbine - 1)))
+    signal = signal - ((-9 + 3 * (turbine - 1)) * D);
+
+    % Clean up signal
+    signal = filloutliers(signal, 'linear');
+
+    % plot(signal)
+
+    [PSD, f] = pwelch(signal, window, noverlap, nfft, PIV_FPS);
+    
+    % Convert frequency to strouhal
+    St = (f * D * 1E-3) / u_inf;
+    
+    % Plot
+    loglog(St, PSD, 'linewidth', 2, 'displayname', label)
+    
+end
+
+plot([20 100],(0.01.*[20 100]).^(-5/3), 'color', 'red', 'linewidth', 3', 'linestyle', ':')
+
+hold off
+
+xscale('log')
+yscale('log')
+xlim([1E-2, 1E1])
+ylim([1E-3, 2E2])
+
+legend('location', 'northeast', 'interpreter', 'latex')
+xlabel('Strouhal Number')
+ylabel('Power Spectral Density')
+grid on
+
+%%
+
+Fs = 1385;
+dt = 1/PIV_FPS;
+
+% y = fft(signal,length(signal));
+% 
+% f = (1/(Fs*length(signal))).*abs(y(1:length(signal)/2+1)).^2;
+% P1(2:end-1) = 2.*P1(2:end-1);
+% 
+% plot(f,P1,'LineWidth', 2)
+
+
+NFFT = length(signal);	
+y = fft(signal,NFFT);
+f = Fs.*(0:(NFFT/2))/NFFT;
+P1 = (1/(Fs*NFFT)).*abs(y(1:NFFT/2+1)).^2;
+P1(2:end-1) = 2.*P1(2:end-1);
+plot(f,P1,'LineWidth', 1.2)
+xscale('log')
+yscale('log')
+
+%%
+
+clc; close all
+figure('color', 'white')
+title(sprintf('$x/ D = %2.0f$', x_location), 'Interpreter', 'latex')
+hold on
+% Loop through turbines
+for turbine = 1:5
+
+    % Label turbine
+    label = sprintf('Turbine %1.0f', turbine);
+
+    % Append signals
+    signal = [tracking(1).raw(turbine).center_minimum(:, index); tracking(2).raw(turbine).center_minimum(:, index); tracking(3).raw(turbine).center_minimum(:, index)];
+
+    disp((-9  + 3 * (turbine - 1)))
+    signal = signal - ((-9 + 3 * (turbine - 1)) * D);
+
+    % Clean up signal
+    signal = filloutliers(signal, 'linear');
+
+    NFFT = length(signal);	
+    y = fft(signal,NFFT);
+    f = Fs.*(0:(NFFT/2))/NFFT;
+    P1 = (1/(Fs*NFFT)).*abs(y(1:NFFT/2+1)).^2;
+    P1(2:end-1) = 2.*P1(2:end-1);
+    plot(f,P1,'LineWidth', 1.2)
+
+end
+
+% plot([20 100],(0.01.*[20 100]).^(-5/3), 'color', 'red', 'linewidth', 3', 'linestyle', ':')
+
+hold off
+
+xscale('log')
+yscale('log')
+
+
+
 
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

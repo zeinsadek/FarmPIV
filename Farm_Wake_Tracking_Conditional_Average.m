@@ -312,7 +312,7 @@ end
 
 %% Center line detection for phase average
 
-contour_component = 'uv';
+contour_component = 'u';
 
 clc; close all;
 figure('color', 'white')
@@ -348,6 +348,9 @@ for angle_enumerate = 1:length(target_angles)
         %%% Part 1: Track minimum velocity
         [tst, min_velocity_indicies] = min(cropped_snapshot, [], 1);
 
+        % Save to plot later
+        conditional_average_centers(turbine).center = (cropped_y(min_velocity_indicies) / D) - (-12 + turbine * 3);
+
         plot(X(1,:) / D, cropped_y(min_velocity_indicies) / D, 'color', 'black', 'linewidth', 3)
 
     end
@@ -361,7 +364,7 @@ for angle_enumerate = 1:length(target_angles)
     yticks(-12:3:3)
     colorbar()
     set(gca, 'YDir', 'reverse')
-    clim([-0.8, 0.8])
+    % clim([-0.8, 0.8])
     % clim([0, 2.5])
     colormap(coolwarm)
 
@@ -380,6 +383,20 @@ set(ax, 'CLim', global_clim);
 
 clear target_angle
 
+
+%% 
+
+gaussian_window = 10;
+
+figure('color', 'white')
+hold on
+
+for turbine = 1:5
+    plot(x / D, smoothdata(conditional_average_centers(turbine).center, 'gaussian', 10))
+    scatter(x / D, smoothdata(conditional_average_centers(turbine).center, 'gaussian', 10), 20, 'filled')
+end
+hold off
+axis equal
 
 
 

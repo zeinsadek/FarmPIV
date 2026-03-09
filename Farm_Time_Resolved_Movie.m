@@ -19,8 +19,8 @@ fprintf("All Paths Imported...\n\n");
 clc;
 
 % Data paths
-experiment  = 'Farm2Farm_20D_Gap';
-recording   = 'Plane_3_Recording_1';
+experiment  = 'SingleFarm';
+recording   = 'Plane_9_Recording_1';
 
 project     = '/Users/zeinsadek/Library/Mobile Documents/com~apple~CloudDocs/Data/Farm';
 data_folder = fullfile(project, 'data', experiment);
@@ -48,18 +48,19 @@ V = data.V;
 % GENERATE MOVIE (u)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-num_images = 1200;
+num_images = 600;
 FPS        = 60;
-levels     = 500;
+levels     = 100;
 
-v = VideoWriter(fullfile(save_folder, strcat(recording, '_U_MOVIE')),'MPEG-4');
+v = VideoWriter(fullfile(save_folder, strcat(recording, '_U_MOVIE.mp4')),'MPEG-4');
 v.FrameRate = FPS;
 open(v)
 
 clc; close all;
 for i = 1:num_images
     progressbarText(i/num_images);
-    ax = figure('Position', [300,300,200,600], 'Visible', 'off');
+    ax = figure('Position', [300,300,400,1200], 'Visible', 'off');
+    set(ax, 'Resize', 'off');
 
     % Remove Ticks
     set(gca,'YTickLabel',[]);
@@ -83,9 +84,12 @@ for i = 1:num_images
     c = colorbar();
     hold off
 
+    pause(3)
     frame = getframe(ax);
-    close all
     writeVideo(v,frame);
+    
+    close all
+    
 end
 close(v);
 
