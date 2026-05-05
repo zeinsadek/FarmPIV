@@ -6,6 +6,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clc; clear; close all;
+addpath('/Users/zeinsadek/Documents/MATLAB/MatlabFunctions/Inpaint_nans')
 addpath('/Users/zeinsadek/Desktop/Experiments/PIV/Processing/Farm/Farm_Functions');
 addpath('/Users/zeinsadek/Desktop/Experiments/PIV/Processing/readimx-v2.1.8-osx');
 addpath('/Users/zeinsadek/Documents/MATLAB/colormaps/slanCM')
@@ -18,8 +19,11 @@ fprintf("All Paths Imported...\n\n");
 
 % Data path
 experiment = {'SingleFarm'};
-% experiment = {'Farm2Farm_10D_Gap'};
 blocks = [1,2,3];
+
+% Turbine/Farm dimensions
+D = 80;
+Sy = 3;
 
 % Paths
 blocks_path = fullfile('/Users/zeinsadek/Library/Mobile Documents/com~apple~CloudDocs/Data/Farm/blocks');
@@ -36,6 +40,85 @@ end
 
 clear e p b tmp path experiment block blocks_path
 
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% FIX OUTER FLOW REGION IN RAW WAKE DATA
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Spacing between blocks
+block_spacing = 20;
+
+% Try to detect bad points in outer region
+massage_outer_top = -4;
+massage_outer_bottom = -3.5;
+
+% How much to delete (in indicies)
+mask_width = 14;
+
+% Loop through components
+components = {'u', 'v', 'uu', 'vv', 'uv'};
+
+% Where turbines are   
+turbine_positions = -9:3:3;
+
+
+for block = 1:3
+    for c = 1:length(components)
+        component = components{c};
+
+        % Load coordinates
+        X = data(block).X;
+        x = X(1,:);
+        Y = data(block).Y - turbine_positions(1);
+        y = Y(:,1);
+    
+        % Load data
+        raw_wake = data(block).u;
+    
+        [~, outer_top_idx] = min(abs(y - massage_outer_top));
+        [~, outer_bottom_idx] = min(abs(y - massage_outer_bottom));
+     
+        % Mask upper left corner of each plane
+        corner_xs = [1,4,7] + (block - 1) * block_spacing;
+    
+        % Mask bad corners
+        for j = 1:3
+            [~, tmp_x_idx] = min(abs(x - corner_xs(j)));
+            raw_wake(outer_top_idx:outer_bottom_idx, tmp_x_idx:(tmp_x_idx + mask_width - 1)) = nan;
+        end
+    
+        % Fill in bad spots
+        % raw_wake(outer_top_idx:outer_bottom_idx, :) = fillmissing(raw_wake(outer_top_idx:outer_bottom_idx, :), 'next', 2);
+
+        % Try using inpaint_nans
+        raw_wake = inpaint_nans(double(raw_wake));
+    
+        % Save fixed arrays
+        outer_fixed(block).(component) = raw_wake;
+        outer_fixed(block).X = X;
+        outer_fixed(block).Y = Y;
+    end
+end
+
+
+% Plot to check
+figure('color', 'white')
+hold on
+for block = 1:3
+    contourf(outer_fixed(block).X, outer_fixed(block).Y, outer_fixed(block).u, 100, 'linestyle', 'none')
+end
+hold off
+
+axis equal
+set(gca, 'YDir', 'reverse')
+xlabel('u [m/s]')
+ylabel('z / D')
+ylim([-4.5, 15])
+
+clear colors massage_outer_bottom massage_outer_top block block_spacing c component corner_xs j mask_width
+clear outer_bottom_idx outer_top_idx raw_wake tmp_x_idx x X y Y components
+
+
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % CREATE A MASSAGED VERSION OF THE DATA AT THE SEAMS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -43,12 +126,14 @@ clear e p b tmp path experiment block blocks_path
 % Loop through components
 components = {'u', 'v', 'uu', 'vv', 'uv'};
 
+% Loop through blocks
 for block = 1:3
     for c = 1:length(components)
         component = components{c};
 
         % Pull in block data
         u = data(block).(component);
+        % u = outer_fixed(block).(component);
         X = data(block).X;
         Y = data(block).Y;
 
@@ -81,128 +166,288 @@ for block = 1:3
     end
 end
 
-clear components block c component u X Y blended left right discontinuity
 
-
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% SEGMENT TURBINES, GET CENTERLINE VELOCITY
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-% Turbine/Farm dimensions
-D = 80;
-Sy = 3;
-u_inf = 7.5;
-
-% T1 ~ edge turbine
-% T4 ~ center turbine
-turbine_positions = -9:3:3;
-
-% Loop through and crop different wakes
-for t = 1:length(turbine_positions)
-    for block = 1:3
-
-        % Load data
-        X = data(block).X;
-        Y = data(block).Y;
-        x = X(1,:);
-        y = Y(:,1);
-        
-        raw_u = data(block).u;
-        massaged_u = cleaned(block).u;
-
-        centered_y = y - turbine_positions(t);
-        mask = (centered_y >= -Sy) & (centered_y <= Sy);
-    
-        % Save
-        wakes(t, block).raw.u = raw_u(mask, :);
-        wakes(t, block).massaged.u = massaged_u(mask, :);
-        wakes(t, block).Y = Y(mask, :);
-        wakes(t, block).X = X(mask, :);
-
-        % Raw + Massaged
-        [r,~] = size(wakes(t, block).raw.u);
-        center_index = round(r/2);
-    
-        % Centerline of both datasets
-        raw_center_velocity =  wakes(t, block).raw.u(center_index, :);
-        massaged_center_velocity =  wakes(t, block).massaged.u(center_index, :);
-
-        wakes(t, block).raw.centerline_velocity = raw_center_velocity;
-        wakes(t, block).massaged.centerline_velocity = massaged_center_velocity;
-    end
-end
-
-% clear t centered_y mask block X Y y raw_u massaged_u centered_y mask
-% clear center_index massaged_center_velocity r raw_center_velocity
-
-
-
-
-%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% PLOT CENTERLINE VELOCITIES
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-clear mean_centerline_velocity
-
-% Turbine colors
-turbine_colors = slanCM('imola', 5);
-
-% Plot centerlines 
-clc; close all
+% Plot to check
 figure('color', 'white')
-tiledlayout(2,1)
-
-h(1) = nexttile;
 hold on
 for block = 1:3
-    % Average over all turbines per block
-    tmp = nan(5, length(wakes(1,1).X));
-    for t = 2:5
-        plot(wakes(t, block).X(1,:), wakes(t, block).raw.centerline_velocity, 'color', turbine_colors(t,:))
-        tmp(t,:) = wakes(t, block).raw.centerline_velocity;
-    end
-    plot(wakes(t, block).X(1,:), mean(tmp, 1, 'omitnan'), 'color', 'black', 'linewidth', 2)
-
-    % Save mean
-    mean_centerline_velocity(block).raw.u = mean(tmp, 1, 'omitnan');
-    mean_centerline_velocity(block).raw.x = wakes(t, block).X(1,:);
+    contourf(cleaned(block).X, cleaned(block).Y, cleaned(block).u, 100, 'linestyle', 'none')
 end
 hold off
-title('Raw')
+
+axis equal
+set(gca, 'YDir', 'reverse')
+xlabel('u [m/s]')
+ylabel('z / D')
+
+clear components block c component u X Y blended left right discontinuity massage_outer_top massage_outer_bottom
 
 
-h(1) = nexttile;
+%% plot profiles to try and fix fucked up edge
+
+skip = 10;
+
+figure('color', 'white')
 hold on
 for block = 1:3
-    % Average over all turbines per block
-    tmp = nan(5, length(wakes(1,1).X));
-    for t = 2:5
-        plot(wakes(t, block).X(1,:), wakes(t, block).massaged.centerline_velocity, 'color', turbine_colors(t,:))
-        tmp(t,:) = wakes(t, block).massaged.centerline_velocity;
+    for i = 1:skip:190
+        plot(data(block).u(:,i), data(block).Y(:,1))
     end
-    plot(wakes(t, block).X(1,:), mean(tmp, 1, 'omitnan'), 'color', 'black', 'linewidth', 2)
+end
+hold on
+set(gca, 'YDir', 'reverse')
+yline(-12)
 
-    % Save mean
-    mean_centerline_velocity(block).massaged.u = mean(tmp, 1, 'omitnan');
-    mean_centerline_velocity(block).massaged.x = wakes(t, block).X(1,:);
+%% Try fixing after massaging
+
+% for block = 1:3
+% 
+%         % Load coordinates
+%         X = cleaned(block).X;
+%         Y = cleaned(block).Y;
+%         raw_wake = cleaned(block).u;
+%         x = X(1,:);
+%         y = Y(:,1);
+% 
+% 
+%         % Try to detect bad points in outer region
+%         massage_outer_top = -13;
+%         massage_outer_bottom = -12;
+% 
+%         [~, outer_top_idx] = min(abs(y - massage_outer_top));
+%         [~, outer_bottom_idx] = min(abs(y - massage_outer_bottom));
+% 
+%         raw_wake(outer_top_idx:outer_bottom_idx, :) = nan;
+% 
+%         raw_wake = fillmissing(raw_wake, 'next', 1);
+% 
+%         % Fill in bad spots
+%         % raw_wake(outer_top_idx:outer_bottom_idx, :) = fillmissing(raw_wake(outer_top_idx:outer_bottom_idx, :), 'next', 1);
+% 
+% 
+%         % Save fixed arrays
+%         test(block).u = raw_wake;
+%         test(block).X = X;
+%         test(block).Y = Y;
+% 
+% end
+% 
+% 
+% % Plot to check
+% figure('color', 'white')
+% hold on
+% for block = 1:3
+%     contourf(test(block).X, test(block).Y, test(block).u, 100, 'linestyle', 'none')
+% end
+% hold off
+% yline(massage_outer_top)
+% yline(massage_outer_bottom)
+% axis equal
+% set(gca, 'YDir', 'reverse')
+% xlabel('u [m/s]')
+% ylabel('z / D')
+% % ylim([-4.5, 15])
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% LOOK AT PROFILES
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Near, middle, and far regions
+colors(1).c = 'red';
+colors(2).c = 'green';
+colors(3).c = 'blue';
+
+block_spacing = 20;
+
+% Plot profiles
+figure('color', 'white')
+hold on
+for block = 1:3
+
+    % Load coordinates
+    X = data(block).X;
+    x = X(1,:);
+    Y = data(block).Y - turbine_positions(1);
+    y = Y(:,1);
+
+    % Load data
+    raw_wake = data(block).u;
+    massaged_outer = outer_fixed(block).u;
+    massaged_wake = cleaned(block).u;
+
+    % Plot
+    contourf(X, Y, massaged_wake, 100, 'linestyle', 'none')
+
 end
 hold off
-title('Massaged')
+
+axis equal
+set(gca, 'YDir', 'reverse')
+xlabel('u [m/s]')
+ylabel('z / D')
+ylim([-4.5, 15])
+
+
+
+% Plot profiles
+figure('color', 'white')
+hold on
+for block = 1:3
+
+    % Load coordinates
+    Y = data(block).Y - turbine_positions(1);
+    y = Y(:,1);
+
+    % Load data
+    raw_wake = data(block).u;
+    massaged_outer = outer_fixed(block).u;
+    massaged_wake = cleaned(block).u;
+
+    % Plot
+    step = 10;
+    for i = 1:step:size(raw_wake,2)
+        plot(massaged_wake(:,i), y, 'color', colors(block).c)
+    end
+    
+end
+hold off
+set(gca, 'YDir', 'reverse')
+
+clear block block_spacing i massaged_outer massaged_wake raw_wake step x X y Y
 
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% COMPUTE FARM HALF WIDTH
+% COMPUTE AVG INNER AND OUTER VELOCITIES
+% BLOCK AVERAGE INNER AND OUTER REGIONS (U1 & U2)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-u_inf = 7.5;
+% Can use bigger bounds for when we can fix the outer flow
+% outer_top = -4;
+% outer_bottom = -3;
+
+% Static block for outer flow
+outer_top = -3;
+outer_bottom = -2.75;
+
+% Static block for inner core
+inner_top = 3;
+inner_bottom = 14;
+
+
+figure('color', 'white')
+hold on
+for block = 1:3
+
+    % Load data
+    u = cleaned(block).u;
+    Y = data(block).Y - turbine_positions(1);
+    X = data(block).X;
+    y = Y(:,1);
+    x = X(1,:);
+
+    % Mask inner region
+    [~, inner_top_idx] = min(abs(y - inner_top));
+    [~, inner_bottom_idx] = min(abs(y - inner_bottom));  
+    u_inner = u(inner_top_idx:inner_bottom_idx, :);
+    contourf(X(inner_top_idx:inner_bottom_idx, :), Y(inner_top_idx:inner_bottom_idx, :), u_inner, 20, 'LineStyle', 'none')
+
+    % Mask outer region
+    [~, outer_top_idx] = min(abs(y - outer_top));
+    [~, outer_bottom_idx] = min(abs(y - outer_bottom));  
+    u_outer = u(outer_top_idx:outer_bottom_idx, :);
+    contourf(X(outer_top_idx:outer_bottom_idx, :), Y(outer_top_idx:outer_bottom_idx, :), u_outer, 20, 'LineStyle', 'none')
+
+    
+    % Average inner/outer regions 
+    inner_mean(block).u = mean(u_inner, 1, 'omitnan');
+    outer_mean(block).u = mean(u_outer, 1, 'omitnan');
+
+    % Min/max of inner/outer regions
+    inner_min(block).u = min(u_inner, [], 1, 'omitnan');
+    outer_max(block).u = max(u_outer, [], 1, 'omitnan');
+    xs(block).x = x;
+
+    % Get center line velocity of middle turbine
+    [~, center_idx] = min(abs(y - Sy * 3));
+    middle_centerline(block).u = u(center_idx, :);
+
+
+end
+hold off
+axis equal
+set(gca, 'YDir', 'reverse')
+
+
+lw = 2;
+figure('color', 'white')
+tile = tiledlayout(1,2);
+
+h(1) = nexttile;
+hold on
+for block = 1:3
+
+    % Means
+    plot(xs(block).x, inner_mean(block).u, 'color', 'red', 'linewidth', lw, 'HandleVisibility', 'off')
+    % plot(xs(block).x, outer_mean(block).u, 'color', 'black', 'linewidth', lw, 'HandleVisibility', 'off')
+
+    % Min/max
+    plot(xs(block).x, inner_min(block).u, 'color', 'green', 'linestyle', '-', 'linewidth', lw, 'HandleVisibility', 'off')
+    % plot(xs(block).x, outer_max(block).u, 'color', 'black', 'linestyle', '--', 'linewidth', lw, 'HandleVisibility', 'off')
+
+    % Centerline of middle farm
+    plot(xs(block).x, middle_centerline(block).u, 'color', 'blue', 'HandleVisibility', 'off', 'linewidth', lw)
+
+end
+
+% Legend (colors)
+plot(nan, nan, 'linewidth', lw, 'color', 'red', 'DisplayName', 'Mean')
+plot(nan, nan, 'linewidth', lw, 'color', 'green', 'DisplayName', 'Min')
+plot(nan, nan, 'linewidth', lw, 'color', 'blue', 'DisplayName', 'Centerline')
+
+
+
+hold off
+legend('box', 'off', 'location', 'southeast')
+ylabel('$u_1, \,\, u_2$ [m/s]', 'interpreter', 'latex')
+xlabel('$x / D$', 'interpreter', 'latex')
+
+h(2) = nexttile;
+hold on
+for block = 1:3
+
+    % Means
+    plot(xs(block).x, outer_mean(block).u - inner_mean(block).u, 'color', 'black', 'linewidth', lw, 'HandleVisibility', 'off')
+
+    % Min/max
+    plot(xs(block).x, outer_max(block).u - inner_min(block).u, 'color', 'black', 'linestyle', '--', 'linewidth', lw, 'HandleVisibility', 'off')
+
+end
+
+% Legend
+plot(nan, nan, 'linewidth', lw, 'color', 'black', 'linestyle', '-', 'DisplayName', 'Average')
+plot(nan, nan, 'linewidth', lw, 'color', 'black', 'linestyle', '--', 'DisplayName', 'Min/Max')
+
+hold off
+legend('box', 'off', 'location', 'northeast')
+ylabel('$\Delta u = u_1 - u_2$', 'interpreter', 'latex')
+xlabel('$x / D$', 'interpreter', 'latex')
+
+clear block h inner_bottom inner_bottom_idx inner_top inner_top_idx lw outer_bottom outer_bottom_idx outer_top outer_top_idx tile 
+clear u x xs X y Y u_inner u_outer center_idx
+
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% COMPUTE FARM HALF WIDTH (Mean velocity)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 turbine = 1;
 half_width_factor = 0.5;
 
 clc; close all
 figure('color', 'white')
+title('Block Mean Velocity')
 hold on
 for block = 1:3
-
 
     % Load coordinates
     X = data(block).X;
@@ -220,11 +465,15 @@ for block = 1:3
     massaged_wake(Y > 3) = nan;
     massaged_wake_uncropped(Y > 3) = nan;
 
-    % Get centerline velocities
-    raw_center_velocity = mean_centerline_velocity(block).raw.u;
-    massaged_center_velocity = mean_centerline_velocity(block).massaged.u;
+    % Get centerline velocities (WHICH U1 AND U2 WE USE)
+    raw_center_velocity = inner_mean(block).u;
+    massaged_center_velocity = raw_center_velocity;
+
+
+
 
     % Find half-width velocity
+    u_inf = outer_mean(block).u;
     raw_center_half_velocity = half_width_factor * (raw_center_velocity + u_inf);
     massaged_center_half_velocity = half_width_factor * (massaged_center_velocity + u_inf);
 
@@ -239,15 +488,18 @@ for block = 1:3
 
 
     %%% Top (bottom unflipped)
-    % Y_bottom = wakes(t).Y(center_index:end, 1);
     raw_isnan_bottom = raw_isnan;
     massaged_isnan_bottom = massaged_isnan;
 
     % Vertical difference to find edge
     raw_isnan_bottom_diff = abs(diff(raw_isnan_bottom, 1, 1));
     massaged_isnan_bottom_diff = abs(diff(massaged_isnan_bottom, 1, 1));
+
+    % Find half-width indicies
     [~, raw_bottom_edge_index] = max(raw_isnan_bottom_diff, [], 1);
     [~, massaged_bottom_edge_index] = max(massaged_isnan_bottom_diff, [], 1);
+
+    % Get half-width
     raw_bottom_edge = Y(raw_bottom_edge_index);
     massaged_bottom_edge = Y(massaged_bottom_edge_index);
     
@@ -255,50 +507,46 @@ for block = 1:3
     raw_bottom_edge(raw_bottom_edge_index == 1) = Y(1);
     massaged_bottom_edge(massaged_bottom_edge_index == 1) = Y(1);
 
-    % u_tilde = (massaged_wake_uncropped - massaged_center_velocity) ./ (10 - massaged_center_velocity);
-
     % Plot
     contourf(X, Y, massaged_wake_uncropped, 'linestyle', 'none')
-    plot(x, sgolayfilt(massaged_bottom_edge, 3, 21), 'color', 'black', 'linewidth', 2)
-
-    % plot(x, sgolayfilt(raw_bottom_edge, 3, 21), 'color', 'red', 'linewidth', 2)
+    plot(x, sgolayfilt(massaged_bottom_edge, 3, 5), 'color', 'black', 'linewidth', 2)
     colorbar()
 
-    % Save to fit a line
-    xs(block, :) = x;
-    ys(block, :) = massaged_bottom_edge;
+
+    % Save values
+    halfwidth_mean.x(block, :) = x;
+    halfwidth_mean.massaged(block, :) = massaged_bottom_edge;
+    halfwidth_mean.raw(block, :) = raw_bottom_edge;
     
 end
-
-
-% Fit using all points
-x_fit = reshape(xs.', 1, []);
-y_fit = reshape(ys.', 1, []);
 
 
 hold off
 axis equal
 set(gca, 'YDir', 'reverse')
-ylim([-3, 3])
+ylim([-3, 12])
+yline(0, 'linestyle', '--')
 xlabel('$x / D$', 'interpreter', 'latex')
 ylabel('$z / D$', 'interpreter', 'latex')
 
+clear block half_width_factor massaged_bottom_edge massaged_bottom_edge_index massaged_center_half_velocity
+clear massaged_center_velocity massaged_isnan massaged_isnan_bottom massaged_isnan_bottom_diff
+clear massaged_wake massaged_wake_uncropped raw_bottom_edge raw_bottom_edge_index raw_center_half_velocity
+clear raw_center_velocity raw_isnan raw_isnan_bottom raw_isnan_bottom_diff raw_wake turbine turbine_colors
+clear x_fit y_fit x halfwidth_x X y halfwidth_massaged Y
 
 
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% COMPUTE FARM HALF WIDTH (Min/Max velocity)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-%% Compute momentum thickness
-
-u_inf = 7.5;
 turbine = 1;
 half_width_factor = 0.5;
 
+clc; close all
 figure('color', 'white')
+title('Min/Max Velocities')
 hold on
-
-% Store momentum thickness results
-theta_raw = cell(1,3);
-theta_massaged = cell(1,3);
-
 for block = 1:3
 
     % Load coordinates
@@ -310,56 +558,22 @@ for block = 1:3
     % Load data
     raw_wake = data(block).u;
     massaged_wake = cleaned(block).u;
+    massaged_wake_uncropped = cleaned(block).u;
 
     % Crop inner side
     raw_wake(Y > 3) = nan;
     massaged_wake(Y > 3) = nan;
+    massaged_wake_uncropped(Y > 3) = nan;
 
-    % Get centerline velocities (core velocity U2(x))
-    raw_center_velocity = mean_centerline_velocity(block).raw.u;         % 1 x Nx
-    massaged_center_velocity = mean_centerline_velocity(block).massaged.u;
-
-    % -----------------------------
-    % Mixing-layer momentum thickness theta(x)
-    % U1 = u_inf (outer), U2 = U_core(x) (inner/core)
-    % theta(x) = ∫ ((U-U2)(U1-U) / (U1-U2)^2) dy
-    % -----------------------------
-    U1 = u_inf;
-
-    % Preallocate
-    theta_raw{block}      = nan(size(x));
-    theta_massaged{block} = nan(size(x));
-    tmp_x{block} = x;
-
-    % Column-wise integration over y
-    for j = 1:numel(x)
-
-        % --- RAW ---
-        Ucol = raw_wake(:, j);
-        U2   = raw_center_velocity(j);
-        dU   = U1 - U2;
-
-        good = isfinite(Ucol) & isfinite(y);
-        if nnz(good) >= 3 && isfinite(dU) && dU > 1e-6
-            integrand = ((Ucol(good) - U2) .* (U1 - Ucol(good))) ./ (dU.^2);
-            % Momentum thickness in rotor diameters D
-            theta_raw{block}(j) = trapz(y(good), integrand);
-        end
-
-        % --- MASSAGED ---
-        Ucol = massaged_wake(:, j);
-        U2   = massaged_center_velocity(j);
-        dU   = U1 - U2;
-
-        good = isfinite(Ucol) & isfinite(y);
-        if nnz(good) >= 3 && isfinite(dU) && dU > 1e-6
-            integrand = ((Ucol(good) - U2) .* (U1 - Ucol(good))) ./ (dU.^2);
-            % Momentum thickness in rotor diameters D
-            theta_massaged{block}(j) = trapz(y(good), integrand);
-        end
-    end
+    % Get centerline velocities (WHICH U1 AND U2 WE USE)
+    raw_center_velocity = inner_min(block).u;
+    massaged_center_velocity = raw_center_velocity;
 
     % Find half-width velocity
+    u_inf = outer_max(block).u;
+
+
+
     raw_center_half_velocity = half_width_factor * (raw_center_velocity + u_inf);
     massaged_center_half_velocity = half_width_factor * (massaged_center_velocity + u_inf);
 
@@ -371,6 +585,8 @@ for block = 1:3
     raw_isnan = isnan(raw_wake);
     massaged_isnan = isnan(massaged_wake);
 
+
+
     %%% Top (bottom unflipped)
     raw_isnan_bottom = raw_isnan;
     massaged_isnan_bottom = massaged_isnan;
@@ -378,54 +594,686 @@ for block = 1:3
     % Vertical difference to find edge
     raw_isnan_bottom_diff = abs(diff(raw_isnan_bottom, 1, 1));
     massaged_isnan_bottom_diff = abs(diff(massaged_isnan_bottom, 1, 1));
+
+    % Find half-width indicies
     [~, raw_bottom_edge_index] = max(raw_isnan_bottom_diff, [], 1);
     [~, massaged_bottom_edge_index] = max(massaged_isnan_bottom_diff, [], 1);
+
+    % Get half-width
     raw_bottom_edge = Y(raw_bottom_edge_index);
     massaged_bottom_edge = Y(massaged_bottom_edge_index);
-
+    
     % Fix values for when detected value goes out of bounds
     raw_bottom_edge(raw_bottom_edge_index == 1) = Y(1);
     massaged_bottom_edge(massaged_bottom_edge_index == 1) = Y(1);
 
     % Plot
-    % contourf(X, Y, massaged_wake)
-    % plot(x, sgolayfilt(massaged_bottom_edge, 3, 21), 'color', 'black', 'linewidth', 2)
+    contourf(X, Y, massaged_wake_uncropped, 'linestyle', 'none')
+    plot(x, sgolayfilt(massaged_bottom_edge, 3, 5), 'color', 'black', 'linewidth', 2)
+    colorbar()
 
-    % Save to fit a line
-    xs(block, :) = x;
-    ys(block, :) = massaged_bottom_edge;
 
+    % Save values
+    halfwidth_minMax.x(block, :) = x;
+    halfwidth_minMax.massaged(block, :) = massaged_bottom_edge;
+    halfwidth_minMax.raw(block, :) = raw_bottom_edge;
+    
 end
 
-% Fit using all points
-x_fit = reshape(xs.', 1, []);
-y_fit = reshape(ys.', 1, []);
-
-scatter(x_fit, y_fit, 20, 'filled')
 
 hold off
 axis equal
 set(gca, 'YDir', 'reverse')
-ylim([-5, 6])
-xlim([0, 51])
-yline(0, 'linewidth', 1, 'color', 'black')
-xlabel('x / D')
-ylabel('Half-Width [D]')
+ylim([-3, 12])
+yline(0, 'linestyle', '--')
+xlabel('$x / D$', 'interpreter', 'latex')
+ylabel('$z / D$', 'interpreter', 'latex')
+
+clear block half_width_factor massaged_bottom_edge massaged_bottom_edge_index massaged_center_half_velocity
+clear massaged_center_velocity massaged_isnan massaged_isnan_bottom massaged_isnan_bottom_diff
+clear massaged_wake massaged_wake_uncropped raw_bottom_edge raw_bottom_edge_index raw_center_half_velocity
+clear raw_center_velocity raw_isnan raw_isnan_bottom raw_isnan_bottom_diff raw_wake turbine turbine_colors
+clear x_fit y_fit x halfwidth_x X y halfwidth_massaged Y
 
 
-% Plot the momentum thicknesses
-sz = 50;
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% COMPUTE FARM HALF WIDTH (middle centerline)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+turbine = 1;
+half_width_factor = 0.5;
+
+clc; close all
+figure('color', 'white')
+title('Middle Centerline Velocities')
+hold on
+for block = 1:3
+
+    % Load coordinates
+    X = data(block).X;
+    x = X(1,:);
+    Y = data(block).Y - turbine_positions(turbine);
+    y = Y(:,1);
+
+    % Load data
+    raw_wake = data(block).u;
+    massaged_wake = cleaned(block).u;
+    massaged_wake_uncropped = cleaned(block).u;
+
+    % Crop inner side
+    raw_wake(Y > 3) = nan;
+    massaged_wake(Y > 3) = nan;
+    massaged_wake_uncropped(Y > 3) = nan;
+
+    % Get centerline velocities (WHICH U1 AND U2 WE USE)
+    raw_center_velocity = middle_centerline(block).u;
+    massaged_center_velocity = raw_center_velocity;
+
+    % Find half-width velocity
+    u_inf = outer_max(block).u;
+
+
+
+    raw_center_half_velocity = half_width_factor * (raw_center_velocity + u_inf);
+    massaged_center_half_velocity = half_width_factor * (massaged_center_velocity + u_inf);
+
+    % Inside half-width
+    raw_wake(raw_wake > raw_center_half_velocity) = nan;
+    massaged_wake(massaged_wake > massaged_center_half_velocity) = nan;
+
+    % Detect top and bottom half-widths
+    raw_isnan = isnan(raw_wake);
+    massaged_isnan = isnan(massaged_wake);
+
+
+
+    %%% Top (bottom unflipped)
+    raw_isnan_bottom = raw_isnan;
+    massaged_isnan_bottom = massaged_isnan;
+
+    % Vertical difference to find edge
+    raw_isnan_bottom_diff = abs(diff(raw_isnan_bottom, 1, 1));
+    massaged_isnan_bottom_diff = abs(diff(massaged_isnan_bottom, 1, 1));
+
+    % Find half-width indicies
+    [~, raw_bottom_edge_index] = max(raw_isnan_bottom_diff, [], 1);
+    [~, massaged_bottom_edge_index] = max(massaged_isnan_bottom_diff, [], 1);
+
+    % Get half-width
+    raw_bottom_edge = Y(raw_bottom_edge_index);
+    massaged_bottom_edge = Y(massaged_bottom_edge_index);
+    
+    % Fix values for when detected value goes out of bounds
+    raw_bottom_edge(raw_bottom_edge_index == 1) = Y(1);
+    massaged_bottom_edge(massaged_bottom_edge_index == 1) = Y(1);
+
+    % Plot
+    contourf(X, Y, massaged_wake_uncropped, 'linestyle', 'none')
+    plot(x, sgolayfilt(massaged_bottom_edge, 3, 5), 'color', 'black', 'linewidth', 2)
+    colorbar()
+
+
+    % Save values
+    halfwidth_middle.x(block, :) = x;
+    halfwidth_middle.massaged(block, :) = massaged_bottom_edge;
+    halfwidth_middle.raw(block, :) = raw_bottom_edge;
+    
+end
+
+
+hold off
+axis equal
+set(gca, 'YDir', 'reverse')
+ylim([-3, 12])
+yline(0, 'linestyle', '--')
+xlabel('$x / D$', 'interpreter', 'latex')
+ylabel('$z / D$', 'interpreter', 'latex')
+
+clear block half_width_factor massaged_bottom_edge massaged_bottom_edge_index massaged_center_half_velocity
+clear massaged_center_velocity massaged_isnan massaged_isnan_bottom massaged_isnan_bottom_diff
+clear massaged_wake massaged_wake_uncropped raw_bottom_edge raw_bottom_edge_index raw_center_half_velocity
+clear raw_center_velocity raw_isnan raw_isnan_bottom raw_isnan_bottom_diff raw_wake turbine turbine_colors
+clear x_fit y_fit x halfwidth_x X y halfwidth_massaged Y
+
+
+
+
+%% Plot velocity deficit times the halfwidth to find where the profiles are
+% roughly self-similar
+
+lw = 2;
+
+figure('color', 'white')
+title('$\Delta U \cdot \delta_{1/2}$', 'interpreter', 'latex', 'fontsize', 24)
+hold on
+for block = 1:3
+
+    % Mean velocities
+    U1_mean = outer_mean(block).u;
+    U2_mean = inner_mean(block).u;
+
+    % Min/max velocities
+    U1_max = outer_max(block).u;
+    U2_min = inner_min(block).u;
+
+    % Centerline velocity
+    U2_middle = middle_centerline(block).u;
+
+    % Deficit
+    Delta_U_mean = U1_mean - U2_mean;
+    Delta_U_minMax = U1_max - U2_mean;
+    Delta_U_middle = U1_mean - U2_middle;
+
+    % Halfwidths
+    x_tmp = halfwidth_mean.x(block,:);
+
+    delta_half_mean = halfwidth_mean.massaged(block, :);
+    delta_half_minMax = halfwidth_minMax.massaged(block, :);
+    delta_half_middle = halfwidth_middle.massaged(block, :);
+
+
+    % Plot 
+    plot(x_tmp, Delta_U_mean .* delta_half_mean, 'linewidth', lw, 'color', 'red', 'HandleVisibility', 'off')
+    plot(x_tmp, Delta_U_minMax .* delta_half_minMax, 'linewidth', lw, 'color', 'green', 'HandleVisibility', 'off')
+    plot(x_tmp, Delta_U_middle .* delta_half_middle, 'linewidth', lw, 'color', 'blue', 'HandleVisibility', 'off')
+
+    % Plot horizontal line that is mean of far reigion
+    if block == 3
+        yline(mean(Delta_U_mean .* delta_half_mean), 'color', 'red', 'HandleVisibility', 'off')
+        yline(mean(Delta_U_minMax .* delta_half_minMax), 'color', 'green', 'HandleVisibility', 'off')
+        yline(mean(Delta_U_middle .* delta_half_middle), 'color', 'blue', 'HandleVisibility', 'off')
+    end
+
+end
+
+% Legend
+plot(nan, nan, 'linewidth', lw, 'color', 'red', 'displayname', 'Mean')
+plot(nan, nan, 'linewidth', lw, 'color', 'green', 'displayname', 'Max/Min')
+plot(nan, nan, 'linewidth', lw, 'color', 'blue', 'displayname', 'Centerline')
+
+hold off
+xlabel('$x / D$', 'interpreter', 'latex', 'fontsize', 18)
+legend('box', 'off', 'location', 'southeast')
+
+
+%% Show what the different halfwidths look like also
+
+
+clc; close all
+figure('color', 'white')
+title('$\delta_{1/2}$', 'interpreter', 'latex', 'fontsize', 24)
+hold on
+for block = 1:3
+
+    % Load coordinates
+    X = data(block).X;
+    x = X(1,:);
+    Y = data(block).Y - turbine_positions(1);
+    y = Y(:,1);
+
+    % Load data
+    raw_wake = data(block).u;
+    massaged_wake = cleaned(block).u;
+    massaged_wake_uncropped = cleaned(block).u;
+
+    % Crop inner side
+    raw_wake(Y > 3) = nan;
+    massaged_wake(Y > 3) = nan;
+    massaged_wake_uncropped(Y > 3) = nan;
+
+
+    % Plot
+    contourf(X, Y, massaged_wake_uncropped, 'linestyle', 'none', 'HandleVisibility', 'off')
+    plot(x, halfwidth_mean.massaged(block, :), 'color', 'red', 'linewidth', lw, 'HandleVisibility', 'off')
+    plot(x, halfwidth_minMax.massaged(block, :), 'color', 'green', 'linewidth', lw, 'HandleVisibility', 'off')
+    plot(x, halfwidth_middle.massaged(block, :), 'color', 'blue', 'linewidth', lw, 'HandleVisibility', 'off')
+    
+end
+
+% Legend
+plot(nan, nan, 'linewidth', lw, 'color', 'red', 'displayname', 'Mean')
+plot(nan, nan, 'linewidth', lw, 'color', 'green', 'displayname', 'Max/Min')
+plot(nan, nan, 'linewidth', lw, 'color', 'blue', 'displayname', 'Centerline')
+
+
+hold off
+colorbar()
+axis equal
+set(gca, 'YDir', 'reverse')
+ylim([-3, 6])
+yline(0, 'linestyle', '--', 'HandleVisibility', 'off')
+xlabel('$x / D$', 'interpreter', 'latex')
+ylabel('$z / D$', 'interpreter', 'latex')
+legend('box', 'off', 'location', 'eastoutside')
+
+%% Test momentum thickness integrand profiles
+
+turbine = 1;
+block = 3;
+
+Y = data(block).Y - turbine_positions(turbine);
+y = Y(:,1);
+
+tmp_data = cleaned(block).u;
+% tmp_centerline = mean_centerline_velocity(block).massaged.u;
+
+idx = 100;
+
+% Plot profile of data
+clc; close all
 figure('color', 'white')
 hold on
-for i = 1:3
-    x = tmp_x{i};
-    y = theta_massaged{i};
-    y(x > 40) = nan;
-    scatter(x, y, sz, 'filled', 'markerfacecolor', 'red')
+
+
+% Momentum thickness integrand
+u = tmp_data(:, idx);
+% u1 = max(u, [], 'all', 'omitnan');
+u1 = outer_mean(block).u(idx);
+
+% u2 = min(u, [], 'all', 'omitnan');
+u2 = inner_mean(block).u(idx);
+
+mom_integrand = ((u - u2) .* (u1 - u)) / ((u1 - u2)^2);
+plot(mom_integrand, y)
+
+hold off
+xline(0)
+set(gca, 'YDir', 'reverse')
+xlim([-1, 1])
+
+clear Y y tmp_data ids u u1 u2 mom_integrand turbine block u_inf
+
+%% Loop through to better check
+
+turbine = 1;
+
+% Near, middle, and far regions
+colors(1).c = 'red';
+colors(2).c = 'green';
+colors(3).c = 'blue';
+
+skip = 10;
+
+figure('color', 'white')
+hold on
+for block = 2:3
+
+    Y = data(block).Y - turbine_positions(turbine);
+    y = Y(:,1);
+
+    tmp_data = cleaned(block).u;
+
+    for i = 1:skip:size(tmp_data, 2)
+        u = tmp_data(:, i);
+        % u1 = max(u, [], 'all', 'omitnan');
+        % u2 = min(u, [], 'all', 'omitnan');
+
+        u1 = outer_mean(block).u(i);
+        u2 = inner_mean(block).u(i);
+
+        mom_integrand = ((u - u2) .* (u1 - u)) / ((u1 - u2)^2);
+
+        % Hard mask near the mixing layer
+        mom_integrand(y > 4.5) = nan;
+
+        % 1. Find the main mixing-layer peak (should be near y ~ 0)
+        [~, peak_idx] = max(mom_integrand);
+        
+        % 2. Search downward from the peak for the first point that drops
+        %    below a small threshold (i.e. the integrand has "closed out")
+        thresh = 0.001;   % tune: ~2% of the peak value works well
+        search = mom_integrand(peak_idx:end);
+        below = find(search < thresh, 1, 'first');
+        
+        if isempty(below)
+            cutoff_idx = length(y);   % never closes out within FOV
+            disp('xxx')
+        else
+            cutoff_idx = peak_idx + below - 1;
+        end
+        
+        % 3. Mask everything beyond cutoff_idx
+        mom_integrand(cutoff_idx+1:end) = NaN;
+
+        % Plot
+        plot(mom_integrand, y, 'color', colors(block).c)
+    end
+
 end
 hold off
+hold off
+xline(0)
+set(gca, 'YDir', 'reverse')
+xlim([-1, 1])
+yline(0)
+yline(3)
+
+clear below block cutoff_idx i idx mom_integrand peak_idx search skip thresh
+clear u u1 u2 y Y turbine
 
 
+%% Claude test (compute momentum thickness) + MEAN values
+
+turbine = 1;
+
+% Near, middle, and far regions
+colors(1).c = 'red';
+colors(2).c = 'green';
+colors(3).c = 'blue';
+skip = 1;
+thresh_frac = 0.001;   % fraction of peak below which we consider integrand "closed"
+
+theta = cell(1,3);
+x_theta = cell(1,3);
+
+figure('color', 'white')
+hold on
+for block = 1:3
+    Y = data(block).Y - turbine_positions(turbine);
+    y = Y(:,1);
+    X = data(block).X;
+    x = X(1,:);
+    tmp_data = cleaned(block).u;
+
+    theta{block}   = nan(1, size(tmp_data, 2));
+    x_theta{block} = x;
+
+    for i = 1:size(tmp_data, 2)
+        u  = tmp_data(:, i);
+        % u1 = max(u, [], 'omitnan');
+        % u2 = min(u, [], 'omitnan');
+
+        u1 = outer_mean(block).u(i);
+        u2 = inner_mean(block).u(i);
+        if ~isfinite(u1) || ~isfinite(u2) || (u1 - u2) < 1e-6
+            continue
+        end
+
+        mom_integrand = ((u - u2) .* (u1 - u)) / ((u1 - u2)^2);
+
+        % Find main peak then first drop below threshold after it
+        [pk, peak_idx] = max(mom_integrand);
+        thresh = thresh_frac * pk;
+        below  = find(mom_integrand(peak_idx:end) < thresh, 1, 'first');
+        if isempty(below)
+            cutoff_idx = numel(y);
+        else
+            cutoff_idx = peak_idx + below - 1;
+        end
+
+        % Mask everything beyond the mixing-layer region
+        mom_integrand(cutoff_idx+1:end) = NaN;
+
+        % Integrate (only over finite points)
+        good = isfinite(mom_integrand) & isfinite(y);
+        if nnz(good) >= 3
+            theta{block}(i) = trapz(y(good), mom_integrand(good));
+        end
+
+        % Plot only the columns we'd otherwise have plotted
+        if mod(i-1, skip) == 0
+            plot(mom_integrand, y, 'color', colors(block).c)
+        end
+    end
+end
+hold off
+xline(0)
+set(gca, 'YDir', 'reverse')
+xlim([-1, 1])
+yline(0)
+yline(3)
+
+% Quick look at theta(x)
+figure('color','white'); hold on
+for block = 1:3
+    plot(x_theta{block}, theta{block}, 'color', colors(block).c, 'linewidth', 1.5)
+end
+axis equal
+xlabel('x/D')
+ylabel('\theta [D]') 
+grid on
+
+% Fit a line through blocks 2 and 3
+xs = [x_theta{1}, x_theta{2}, x_theta{3}];
+ys = [theta{1}, theta{2}, theta{3}];
+
+x_cutoff = 6;
+[~, x_cutoff_idx] = min(abs(xs - x_cutoff));
+xs_fit = xs(x_cutoff_idx:end);
+ys_fit = ys(x_cutoff_idx:end);
+
+P = polyfit(xs_fit, ys_fit, 1);
+x_fit = x_cutoff:50;
+plot(x_fit, polyval(P, x_fit), 'color', 'black', 'linestyle', '--')
+xline(x_cutoff)
+
+
+clear below block cutoff_idx i idx mom_integrand peak_idx search skip thresh
+clear u u1 u2 y Y turbine pk P thresh_frac tmp_data x x)cutoff c_cutoff_idx_x_fit 
+clear xs xs_fit X ys
+
+
+%% Claude test (compute momentum thickness) + MIN/MAX values
+
+turbine = 1;
+
+% Near, middle, and far regions
+colors(1).c = 'red';
+colors(2).c = 'green';
+colors(3).c = 'blue';
+skip = 1;
+thresh_frac = 0.1;   % fraction of peak below which we consider integrand "closed"
+
+theta = cell(1,3);
+x_theta = cell(1,3);
+
+figure('color', 'white')
+hold on
+for block = 1:3
+    Y = data(block).Y - turbine_positions(turbine);
+    y = Y(:,1);
+    X = data(block).X;
+    x = X(1,:);
+    tmp_data = cleaned(block).u;
+
+    theta{block}   = nan(1, size(tmp_data, 2));
+    x_theta{block} = x;
+
+    for i = 1:size(tmp_data, 2)
+        u  = tmp_data(:, i);
+        u1 = max(u, [], 'omitnan');
+        u2 = min(u, [], 'omitnan');
+
+        % u1 = outer_mean(block).u(i);
+        % u2 = inner_mean(block).u(i);
+        if ~isfinite(u1) || ~isfinite(u2) || (u1 - u2) < 1e-6
+            continue
+        end
+
+        mom_integrand = ((u - u2) .* (u1 - u)) / ((u1 - u2)^2);
+
+        % Find main peak then first drop below threshold after it
+        [pk, peak_idx] = max(mom_integrand);
+        thresh = thresh_frac * pk;
+        below  = find(mom_integrand(peak_idx:end) < thresh, 1, 'first');
+        if isempty(below)
+            cutoff_idx = numel(y);
+        else
+            cutoff_idx = peak_idx + below - 1;
+        end
+
+        % Mask everything beyond the mixing-layer region
+        mom_integrand(cutoff_idx+1:end) = NaN;
+
+        % Integrate (only over finite points)
+        good = isfinite(mom_integrand) & isfinite(y);
+        if nnz(good) >= 3
+            theta{block}(i) = trapz(y(good), mom_integrand(good));
+        end
+
+        % Plot only the columns we'd otherwise have plotted
+        if mod(i-1, skip) == 0
+            plot(mom_integrand, y, 'color', colors(block).c)
+        end
+    end
+end
+hold off
+xline(0)
+set(gca, 'YDir', 'reverse')
+xlim([-1, 1])
+yline(0)
+yline(3)
+
+% Quick look at theta(x)
+figure('color','white'); hold on
+for block = 1:3
+    plot(x_theta{block}, theta{block}, 'color', colors(block).c, 'linewidth', 1.5)
+end
+axis equal
+xlabel('x/D')
+ylabel('\theta [D]') 
+grid on
+
+% Fit a line through blocks 2 and 3
+xs = [x_theta{1}, x_theta{2}, x_theta{3}];
+ys = [theta{1}, theta{2}, theta{3}];
+
+x_cutoff = 6;
+[~, x_cutoff_idx] = min(abs(xs - x_cutoff));
+xs_fit = xs(x_cutoff_idx:end);
+ys_fit = ys(x_cutoff_idx:end);
+
+P = polyfit(xs_fit, ys_fit, 1);
+x_fit = x_cutoff:50;
+plot(x_fit, polyval(P, x_fit), 'color', 'black', 'linestyle', '--')
+xline(x_cutoff)
+
+
+clear below block cutoff_idx i idx mom_integrand peak_idx search skip thresh
+clear u u1 u2 y Y turbine pk P thresh_frac tmp_data x x)cutoff c_cutoff_idx_x_fit 
+clear xs xs_fit X ys
+
+
+
+
+
+%% Try scaling profiles with all the computed values (all blocks overlayed)
+
+turbine = 1;
+skip = 20;
+
+
+figure('color', 'white')
+hold on
+for block = 1:3
+
+    % Velocity data
+    u = cleaned(block).u;
+    half_width = halfwidth_mean.massaged(block,:);
+    momentum_thickness = theta{block};
+    x = x_theta{block};
+
+    X = data(block).X;
+    Y = data(block).Y - turbine_positions(turbine);
+    y = Y(:,1);
+
+    % Bulk crop data to focus on mixing layer
+    u(Y > 3) = nan;
+
+    % Scale different profiles
+    for i = 1:skip:195
+        u_profile = u(:, i);
+        half_width_local = half_width(i);
+        momentum_thickness_local = momentum_thickness(i);
+
+        % Local inner/outer flows
+        u1 = outer_mean(block).u(i);
+        u2 = inner_mean(block).u(i);
+
+        % Scaled coordinate
+        eta_mom = (y - half_width_local) / momentum_thickness_local;
+
+        % Scaled velocity
+        u_tilde = (u_profile - u2) / (u1 - u2);
+
+        plot(u_tilde, eta_mom, 'color', colors(block).c)
+    end
+end
+
+x_plot = -6:0.01:6;
+plot(0.5*(1 - erf(sqrt(pi)*x_plot/2)), x_plot, 'color', 'black', 'linewidth', 2)
+% plot(0.5*(1 - tanh(x_plot)), x_plot, 'color', 'black')
+
+hold off
+axis square
+box on
+set(gca, 'YDir', 'reverse')
+
+labelFontSize = 18;
+xlabel('$\tilde{u}$', 'interpreter', 'latex', 'fontsize', labelFontSize)
+ylabel('$\eta_{\theta}$', 'interpreter', 'latex', 'fontsize', labelFontSize)
+% ylim([-4, 4])
+% xlim([0, 1])
+
+
+%% Seperated by tile
+figure('color', 'white')
+tile = tiledlayout(1,3);
+
+for block = 1:3
+
+    h(block) = nexttile;
+    hold on
+    title(sprintf('Block %1.0f', block))
+
+    % Velocity data
+    u = cleaned(block).u;
+    half_width = halfwidth_mean.massaged(block,:);
+    momentum_thickness = theta{block};
+    x = x_theta{block};
+
+    X = data(block).X;
+    Y = data(block).Y - turbine_positions(turbine);
+    y = Y(:,1);
+
+    % Bulk crop data to focus on mixing layer
+    u(Y > 3) = nan;
+
+    % Scale different profiles
+    for i = 1:skip:195
+        u_profile = u(:, i);
+        half_width_local = half_width(i);
+        momentum_thickness_local = momentum_thickness(i);
+
+        % Local inner/outer flows
+        u1 = outer_mean(block).u(i);
+        u2 = inner_mean(block).u(i);
+
+        % Scaled coordinate
+        eta_mom = (y - half_width_local) / momentum_thickness_local;
+
+        % Scaled velocity
+        u_tilde = (u_profile - u2) / (u1 - u2);
+
+        plot(u_tilde, eta_mom, 'color', colors(block).c)
+    end
+    axis square
+    set(h(block), 'YDir', 'reverse')
+
+    x_plot = -6:0.01:6;
+    plot(0.5*(1 - erf(sqrt(pi)*x_plot/2)), x_plot, 'color', 'black', 'linewidth', 2)
+
+    hold off
+end
+
+
+linkaxes(h, 'xy')
+
+labelFontSize = 18;
+xlabel(tile, '$\tilde{u}$', 'interpreter', 'latex', 'fontsize', labelFontSize)
+ylabel(tile, '$\eta_{\theta}$', 'interpreter', 'latex', 'fontsize', labelFontSize)
+% ylim([-4, 4])
+% xlim([0, 1])
 
 
 %% Self-similarity test for farm-wake edge mixing layer (hub-height, spanwise y)

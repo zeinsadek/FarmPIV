@@ -383,21 +383,25 @@ FPS = 10;
 skip = 10;
 
 % Save settings
-movie_name = strcat(experiment, '_', recording, '_WakeCenter.mp4');
-v = VideoWriter(fullfile('movies', movie_name),'MPEG-4');
+movie_name = strcat(experiment, '_', recording, '_WakeCenter_EuroMech.mp4');
+% v = VideoWriter(fullfile('movies', movie_name),'MPEG-4'); 
+
+v = VideoWriter(fullfile('/Users/zeinsadek/Downloads/EuroMech_Figures', movie_name),'MPEG-4');
+
 v.FrameRate = FPS;
 open(v)
 
 sz = 5;
 
+clc;
 c = 1;
-for frame = 1:skip:1000
+for frame = 1:skip:50
 
     progressbarText(c / (num_images /skip))
-    ax = figure('color', 'white', 'visible', 'off');
+    ax = figure('color', 'white', 'visible', 'off', 'units', 'centimeters', 'position', [10, 10, 8, 18]);
     hold on
-    % contourf(X / D, Y / D, inpaint_nans(filloutliers(U(:,:,frame), nan)), 20, 'linestyle', 'none')
-    contourf(X / D, Y / D, U(:,:,frame), 20, 'linestyle', 'none')
+    contourf(X / D, Y / D, inpaint_nans(filloutliers(U(:,:,frame), nan)), 20, 'linestyle', 'none')
+    % contourf(X / D, Y / D, U(:,:,frame), 20, 'linestyle', 'none')
 
     for turbine = 1:5
         % Raw
@@ -405,12 +409,12 @@ for frame = 1:skip:1000
         % scatter(x / D, tracking(turbine).center_gaussian(frame, :) / D, sz, 'filled', 'MarkerFaceColor', 'red')
 
         % Raw: Minimum
-        plot(x / D, tracking(turbine).center_minimum(frame, :) / D, 'color', 'red')
-        scatter(x / D, tracking(turbine).center_minimum(frame, :) / D, sz, 'filled', 'MarkerFaceColor', 'red')
+        % plot(x / D, tracking(turbine).center_minimum(frame, :) / D, 'color', 'red')
+        % scatter(x / D, tracking(turbine).center_minimum(frame, :) / D, sz, 'filled', 'MarkerFaceColor', 'red')
 
         % Filtered: Minimum
-        plot(x / D, filtered_tracking(turbine).center_minimum(frame, :) / D, 'color', 'green')
-        scatter(x / D, filtered_tracking(turbine).center_minimum(frame, :) / D, sz, 'filled', 'MarkerFaceColor', 'green')
+        % plot(x / D, filtered_tracking(turbine).center_minimum(frame, :) / D, 'color', 'green')
+        % scatter(x / D, filtered_tracking(turbine).center_minimum(frame, :) / D, sz, 'filled', 'MarkerFaceColor', 'green')
 
         % Filtered: Gaussian
         % plot(x / D, filtered_tracking(turbine).center_gaussian(frame, :) / D, 'color', 'blue')
@@ -419,17 +423,20 @@ for frame = 1:skip:1000
 
     hold off
     axis equal
-    xlim([1,4]); ylim([-10.5, 4.5])
-    colorbar(); colormap(bone); clim([0, 1])
-    set(gca, 'YDir', 'reverse'); yticks(-12:3:3)
-    yline(4.5)
-    yline(1.5)
-    yline(-1.5)
-    yline(-4.5)
-    yline(-7.5)
-    yline(-10.5)
+    xlim([1,4]); ylim([-12, 4.5])
+    colorbar(); colormap(bone); 
+    clim([0, 1])
+    set(gca, 'YDir', 'reverse'); 
+    yticks(-12:3:3)
+    % yline(4.5)
+    % yline(1.5)
+    % yline(-1.5)
+    % yline(-4.5)
+    % yline(-7.5)
+    % yline(-10.5)
 
     % Save to video
+    pause(1)
     videoFrame = getframe(ax);
     close all
     writeVideo(v, videoFrame);

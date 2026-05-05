@@ -5,6 +5,7 @@
 clc; clear; close all;
 addpath('/Users/zeinsadek/Desktop/Experiments/PIV/Processing/Farm/Farm_Functions');
 addpath('/Users/zeinsadek/Desktop/Experiments/PIV/Processing/readimx-v2.1.8-osx');
+addpath('/Users/zeinsadek/Documents/MATLAB/colormaps/slanCM')
 addpath('/Users/zeinsadek/Documents/MATLAB/colormaps')
 fprintf("All Paths Imported...\n\n");
 
@@ -37,9 +38,9 @@ clear e p b tmp path experiment block blocks_path
 % PLOT
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-u_inf = 7.5;
+u_inf = 8;
 experiment = 'SingleFarm';
-component = 'uv';
+component = 'u';
 
 % Font sizes
 labelFontSize = 16;
@@ -64,23 +65,26 @@ end
 % What to normalize by
 if ismember(component, {'uu', 'vv', 'uv'})
     norm = u_inf ^ 2;
-    label = sprintf('$%s / u_\\infty^2$', component_label);
+    label = sprintf('$%s \\mathbin{/} u_\\infty^2$', component_label);
 else
     norm = u_inf;
-    label = sprintf('$%s / u_\\infty$', component_label);
+    label = sprintf('$%s \\mathbin{/} u_\\infty$', component_label);
 end
 
 % Plot combiend data
 for b = 1:length(blocks)
-    contourf(data.(experiment)(b).X, data.(experiment)(b).Y, imgaussfilt(data.(experiment)(b).(component) / norm, 3), 500, 'linestyle', 'none')
+    contourf(data.(experiment)(b).X, data.(experiment)(b).Y, imgaussfilt(data.(experiment)(b).(component) / norm, 3), 20, 'linestyle', 'none')
     clear b
+
+    clim([0.2, 1])
 end
 
 % Which colormap
 if ismember(component, {'v', 'uv'})
     colormap coolwarm
 else
-    colormap parula
+    % colormap parula
+    colormap(slanCM('gothic'))
 end
 
 % Colorbar
