@@ -41,12 +41,12 @@ clear headers opts mean_columns std_columns csv_path csv_dir
 
 
 %% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% PAPER READY PLOTS
+% PAPER READY PLOTS (double column)
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 
 % Get colors for each downstream plot
-palette = 'gem';
+palette = 'emerald';
 colors = slanCM(palette, length(x_positions));
 
 % Plot properties
@@ -65,6 +65,7 @@ maxY = 1.5;
 % Rotor area transparency
 rotorAreaAlpha = 0.1;
 turbineAlpha = 0.4;
+turbineColor = [0.6 0.6 0.6];
 
 % Legend entry width
 legendIconWidth = 10;
@@ -103,15 +104,15 @@ end
 % Draw a turbine
 turb_x = 5.5;
 tower_offset = 0.1;
-% Rotor
-P = plot([turb_x turb_x], [1.5, 0.5], 'color', 'black', 'linewidth', 1, 'handlevisibility', 'off');
-P.Color(4) = turbineAlpha;
-% Tower
-P = plot([turb_x turb_x] + tower_offset, [1, 0], 'color', 'black', 'linewidth', 1, 'handlevisibility', 'off');
-P.Color(4) = turbineAlpha;
-% Nacelle
-P = plot([turb_x, turb_x + 2 * tower_offset], [1, 1], 'color', 'black', 'linewidth', 1, 'handlevisibility', 'off');
-P.Color(4) = turbineAlpha;
+% % Rotor
+% P = plot([turb_x turb_x], [1.5, 0.5], 'color', turbineColor, 'linewidth', 1, 'handlevisibility', 'off');
+% % P.Color(4) = turbineAlpha;
+% % Tower
+% P = plot([turb_x turb_x] + tower_offset, [1, 0], 'color', turbineColor, 'linewidth', 1, 'handlevisibility', 'off');
+% % P.Color(4) = turbineAlpha;
+% % Nacelle
+% P = plot([turb_x, turb_x + 2 * tower_offset], [1, 1], 'color', turbineColor, 'linewidth', 1, 'handlevisibility', 'off');
+% % P.Color(4) = turbineAlpha;
 
 % Shading rotor area
 P = patch([x_start x_end x_end x_start], [minY minY maxY maxY], ...
@@ -187,15 +188,15 @@ end
 % Draw a turbine
 turb_x = 0.05;
 tower_offset = 0.0024;
-% Rotor
-P = plot([turb_x turb_x], [1.5, 0.5], 'color', 'black', 'linewidth', 1, 'handlevisibility', 'off');
-P.Color(4) = turbineAlpha;
-% Tower
-P = plot([turb_x turb_x] + tower_offset, [1, 0], 'color', 'black', 'linewidth', 1, 'handlevisibility', 'off');
-P.Color(4) = turbineAlpha;
-% Nacelle
-P = plot([turb_x, turb_x + 2 * tower_offset], [1, 1], 'color', 'black', 'linewidth', 1, 'handlevisibility', 'off');
-P.Color(4) = turbineAlpha;
+% % Rotor
+% P = plot([turb_x turb_x], [1.5, 0.5], 'color', turbineColor, 'linewidth', 1, 'handlevisibility', 'off');
+% % P.Color(4) = turbineAlpha;
+% % Tower
+% P = plot([turb_x turb_x] + tower_offset, [1, 0], 'color', turbineColor, 'linewidth', 1, 'handlevisibility', 'off');
+% % P.Color(4) = turbineAlpha;
+% % Nacelle
+% P = plot([turb_x, turb_x + 2 * tower_offset], [1, 1], 'color', turbineColor, 'linewidth', 1, 'handlevisibility', 'off');
+% % P.Color(4) = turbineAlpha;
 
 % Shading
 P = patch([x_start x_end x_end x_start], [minY minY maxY maxY], ...
@@ -231,16 +232,221 @@ linkaxes(h, 'y')
 addPanelLabels(h, {'a', 'b'}, 'FontSize', labelFontSize, 'Offset', [-0.1, 1.1])
 
 % Save figure as png and figs
-save_path = '/Users/zeinsadek/Desktop/Experiments/Farm/SingleFarmPaper';
+save_path = '/Users/zeinsadek/Desktop/Experiments/Farm/SingleFarmPaper/InflowProfiles';
 clc; fprintf('Saving figures...\n')
 pause(3)
-exportgraphics(ax, fullfile(save_path, strcat(caze, '_', palette, '.pdf')), 'Resolution', 600);
-% savefig(ax, fullfile(save_path, strcat(caze, '.fig')));
+exportgraphics(ax, fullfile(save_path, 'DoubleColumn', strcat(caze, '_NoTurbine_', palette, '.pdf')), 'Resolution', 600);
 close all; clc; fprintf('Figure saved!\n')
 
 clear l label x_position label prandtl_measurement mean_velocity std_velocity turbulence_intensity h 
 
 
+
+
+
+
+
+%% %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% PAPER READY PLOTS (single column)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+
+% Get colors for each downstream plot
+palette = 'lavender';
+colors = slanCM(palette, length(x_positions));
+
+% Plot properties
+y_top_limit = 95;
+labelFontSize = 10;
+tickFontSize = 8;
+linewidth = 1;
+markersize = 10;
+
+% Shade
+x_start = 0;
+x_end = 10;
+minY = 0.5;
+maxY = 1.5;
+
+% Rotor area transparency
+rotorAreaAlpha = 0.1;
+turbineAlpha = 0.4;
+turbineColor = [0.6 0.6 0.6];
+
+% Legend entry width
+legendIconWidth = 10;
+
+
+% Loop through downstream locations
+clc; close all
+ax = figure('color', 'white', 'units', 'centimeters', 'position', [10, 10, 7.5, 12]);
+tile = tiledlayout(2, 1, 'TileSpacing', 'compact', 'padding', 'compact');
+
+% Velocity profile
+h(1) = nexttile();
+set(h(1), 'FontSize', tickFontSize)
+set(h(1), 'TickLabelInterpreter', 'latex');
+hold on
+for l = 1:length(x_positions)
+
+    % Get x-location
+    x_position = x_positions(l);
+    label = sprintf("$x / D = %2.0f$", x_position * (mesh_spacing / turbine_diameter));
+
+    % Read data
+    mean_velocity = data(l, mean_indicies(2:end-1));
+
+    % Remove bad point from the tunnel speed we used
+    if strcmp(csv_name, 'pp-mean-bl_12ms.csv')
+        mean_velocity(9) = nan;
+        mean_velocity = fillmissing(mean_velocity, 'spline');
+    end
+
+    plot(mean_velocity, hotwire_positions / turbine_diameter, 'color', colors(l,:), 'linewidth', linewidth, 'displayname', label)
+    scatter(mean_velocity, hotwire_positions / turbine_diameter, markersize, 'filled', 'markerfacecolor', colors(l,:), 'HandleVisibility', 'off')
+end
+
+
+% Draw a turbine
+turb_x = 5.5;
+tower_offset = 0.1;
+% % Rotor
+% P = plot([turb_x turb_x], [1.5, 0.5], 'color', turbineColor, 'linewidth', 1, 'handlevisibility', 'off');
+% % P.Color(4) = turbineAlpha;
+% % Tower
+% P = plot([turb_x turb_x] + tower_offset, [1, 0], 'color', turbineColor, 'linewidth', 1, 'handlevisibility', 'off');
+% % P.Color(4) = turbineAlpha;
+% % Nacelle
+% P = plot([turb_x, turb_x + 2 * tower_offset], [1, 1], 'color', turbineColor, 'linewidth', 1, 'handlevisibility', 'off');
+% % P.Color(4) = turbineAlpha;
+
+% Shading rotor area
+P = patch([x_start x_end x_end x_start], [minY minY maxY maxY], ...
+      'black', 'FaceAlpha', rotorAreaAlpha, 'EdgeColor', 'none', 'handlevisibility', 'off');
+uistack(P, 'bottom')
+
+% Lines at top and bottom tips
+yline(1.5, 'linewidth', 0.5, 'color', 'black', 'alpha', 0.15, 'handlevisibility', 'off');
+yline(0.5, 'linewidth', 0.5, 'color', 'black', 'alpha', 0.15, 'handlevisibility', 'off');
+
+% Label for shaded region
+% plot(nan, nan, 'color', 'white', 'displayname', ' ')
+% patch([nan, nan, nan, nan], [nan nan nan nan], ...
+%       'black', 'FaceAlpha', rotorAreaAlpha, 'EdgeColor', 'none', 'displayname', 'Rotor Area');
+
+% Horizontal ticks
+for i = 2:2:10
+    P = yline(i, 'color', 'black', 'linewidth', 0.5, 'alpha', 0.1, 'HandleVisibility', 'off');
+    uistack(P, 'bottom')
+end
+
+hold off
+
+% Legend
+leg = legend('location', 'northwest', 'interpreter', 'latex', 'fontsize', tickFontSize, 'box', 'off');
+leg.IconColumnWidth = legendIconWidth;
+
+% Limits and legend
+axis square
+xlim([5.2, 10])
+ylim([0, 12])
+yticks(0:2:12)
+box on
+
+% Axes labels
+xlabel('$\overline{u}$ [m/s]', 'interpreter', 'latex', 'fontsize', labelFontSize)
+ylabel('$y \mathbin{/} D$', 'interpreter', 'latex', 'fontsize', labelFontSize)
+
+clear l x_position label prandtl_measurement mean_velocity
+
+
+
+
+
+% Turbulence intensity
+h(2) = nexttile;
+set(h(2), 'FontSize', tickFontSize)
+set(h(2), 'TickLabelInterpreter', 'latex');
+hold on
+% set(h(2), 'YTickLabel', [])
+for l = 1:length(x_positions)
+
+    % Get x-location
+    x_position = x_positions(l);
+    label = sprintf("$x/D = %2.0f$", x_position * (mesh_spacing / turbine_diameter));
+
+    % Read data
+    mean_velocity = data(l, mean_indicies(2:end-1));
+    std_velocity = data(l, std_indicies(2:end-1));
+    turbulence_intensity = std_velocity ./ mean_velocity;
+
+    % Remove bad point from the tunnel speed we used
+    if strcmp(csv_name, 'pp-mean-bl_12ms.csv')
+        turbulence_intensity(9) = nan;
+        turbulence_intensity = fillmissing(turbulence_intensity, 'spline');
+    end
+    
+    plot(turbulence_intensity, hotwire_positions / turbine_diameter, 'color', colors(l,:), 'linewidth', linewidth, 'displayname', label)
+    scatter(turbulence_intensity, hotwire_positions / turbine_diameter, markersize, 'filled', 'markerfacecolor', colors(l,:), 'HandleVisibility', 'off')
+
+end
+
+% Draw a turbine
+turb_x = 0.05;
+tower_offset = 0.0024;
+% % Rotor
+% P = plot([turb_x turb_x], [1.5, 0.5], 'color', turbineColor, 'linewidth', 1, 'handlevisibility', 'off');
+% % P.Color(4) = turbineAlpha;
+% % Tower
+% P = plot([turb_x turb_x] + tower_offset, [1, 0], 'color', turbineColor, 'linewidth', 1, 'handlevisibility', 'off');
+% % P.Color(4) = turbineAlpha;
+% % Nacelle
+% P = plot([turb_x, turb_x + 2 * tower_offset], [1, 1], 'color', turbineColor, 'linewidth', 1, 'handlevisibility', 'off');
+% % P.Color(4) = turbineAlpha;
+
+% Shading
+P = patch([x_start x_end x_end x_start], [minY minY maxY maxY], ...
+      'black', 'FaceAlpha', rotorAreaAlpha, 'EdgeColor', 'none', 'handlevisibility', 'off');
+uistack(P, 'bottom')
+
+% Lines at top and bottom tips
+yline(1.5, 'linewidth', 0.5, 'color', 'black', 'alpha', 0.15, 'handlevisibility', 'off');
+yline(0.5, 'linewidth', 0.5, 'color', 'black', 'alpha', 0.15, 'handlevisibility', 'off');
+
+% Horizontal ticks
+for i = 2:2:10
+    P = yline(i, 'color', 'black', 'linewidth', 0.5, 'alpha', 0.1, 'HandleVisibility', 'off');
+    uistack(P, 'bottom')
+end
+
+hold off
+
+
+% Limits and legend
+axis square
+ylim([0, 12])
+yticks(0:2:12)
+xlim([0.04, 0.15])
+xticks(0.05:0.03:0.2)
+box on
+
+% Labels
+% xlabel('$Ti$ [\%]', 'interpreter', 'latex', 'fontsize', labelFontSize)
+xlabel("$\sqrt{\overline{u' u'}} \mathbin{/} u_{\infty}$", 'interpreter', 'latex', 'fontsize', labelFontSize)
+ylabel('$y \mathbin{/} D$', 'interpreter', 'latex', 'fontsize', labelFontSize)
+linkaxes(h, 'y')
+
+% Add a) and b) letters
+addPanelLabels(h, {'a', 'b'}, 'FontSize', labelFontSize, 'Offset', [-0.22, 1.1])
+
+% Save figure as png and figs
+save_path = '/Users/zeinsadek/Desktop/Experiments/Farm/SingleFarmPaper/InflowProfiles';
+clc; fprintf('Saving figures...\n')
+pause(3)
+exportgraphics(ax, fullfile(save_path, 'SingleColumn', strcat(caze, '_NoTurbine_', palette, '.pdf')), 'Resolution', 600);
+close all; clc; fprintf('Figure saved!\n')
+
+clear l label x_position label prandtl_measurement mean_velocity std_velocity turbulence_intensity h 
 
 
 

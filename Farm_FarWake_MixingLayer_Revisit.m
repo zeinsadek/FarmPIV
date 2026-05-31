@@ -681,9 +681,13 @@ tickFontSize = 8;
 % colors(2).c = '#2d6a4f';
 % colors(3).c = '#081c15';
 
-colors(1).c = '#8390fa';
-colors(2).c = '#8390fa';
-colors(3).c = '#8390fa';
+% colors(1).c = '#8390fa';
+% colors(2).c = '#8390fa';
+% colors(3).c = '#8390fa';
+
+colors(1).c = '#ffbe0b';
+colors(2).c = '#ffbe0b';
+colors(3).c = '#ffbe0b';
 
 data_shade_color = [0.91, 0.91 ,0.91];
 % data_shade_color = '#E9E9E9';
@@ -746,13 +750,19 @@ end
 
 
 % Plot Momentum Thickness
+x_cutoff = 5.45;
+
 clc; close all
 fig = figure('color', 'white', 'units', 'centimeters', 'position', [5, 5, 13, 5]);
 tiledlayout(1,1,'padding', 'none')
 nexttile()
 hold on
 for block = 1:3
-    plot(x_theta{block}, theta{block}, 'color', colors(block).c, 'linewidth', 2, 'handlevisibility', 'off')
+    x_tmp = x_theta{block};
+    data_tmp = theta{block};
+
+    data_tmp(x_tmp < x_cutoff) = nan;
+    plot(x_tmp, data_tmp, 'color', colors(block).c, 'linewidth', 2, 'handlevisibility', 'off')
 end
 axis equal
 xlabel('$x \mathbin{/} D$', 'interpreter', 'latex', 'fontsize', labelFontSize)
@@ -766,7 +776,7 @@ ylim([-6.5,2.5])
 xs = [x_theta{1}, x_theta{2}, x_theta{3}];
 ys = [theta{1}, theta{2}, theta{3}];
 
-x_cutoff = 5.6;
+
 [~, x_cutoff_idx] = min(abs(xs - x_cutoff));
 xs_fit = xs(x_cutoff_idx:end);
 ys_fit = ys(x_cutoff_idx:end);
@@ -780,8 +790,9 @@ uistack(tmp, 'bottom')
 
 % Wake merging point
 xline(x_cutoff, 'linewidth', 1, 'handlevisibility', 'off', ...
-      'label', sprintf('Wake Merging: \n$x \\mathbin{/} D = %1.1f$', x_cutoff), 'interpreter', 'latex', ...
-      'Fontsize', 8, 'LabelOrientation', 'horizontal', 'LabelVerticalAlignment', 'bottom')
+      'label', sprintf('Wake merging\n$x \\mathbin{/} D = %1.1f$', x_cutoff), 'interpreter', 'latex', ...
+      'Fontsize', 6, 'LabelOrientation', 'aligned', 'LabelVerticalAlignment', 'middle', ...
+      'LabelHorizontalAlignment', 'left')
 
 % Create LaTeX string for the fit
 fit_str = sprintf('$\\theta = %.3f\\,\\left(\\frac{x}{D} \\right) %+ .3f$', P(1), P(2));
@@ -830,66 +841,6 @@ set(gca, 'TickLabelInterpreter', 'latex');
 
 leg = legend('box', 'off', 'interpreter', 'latex', 'location', 'southeast', 'fontsize', 8);
 leg.IconColumnWidth = 15;
-
-
-
-
-% % -------- SECOND (TOP) X-AXIS --------
-% ax1 = gca;
-% 
-% L_over_D = 63;   % farm length / rotor diameter
-% 
-% ax2 = axes('Position', ax1.Position, ...
-%            'XAxisLocation', 'top', ...
-%            'YAxisLocation', 'right', ...
-%            'Color', 'none', ...
-%            'YColor', 'none', ...
-%            'XColor', 'k');
-% 
-% ax2.XLim = ax1.XLim;
-% ax2.YLim = ax1.YLim;
-% 
-% % Top-axis values: x / L_f
-% xtop = 0:0.1:(ax1.XLim(2)/L_over_D);
-% 
-% % Convert top-axis tick values back to bottom-axis positions
-% xtop_pos = xtop * L_over_D;
-% 
-% ax2.XTick = xtop_pos;
-% 
-% labels = compose('%.1f', xtop);
-% labels{1} = '0';
-% ax2.XTickLabel = labels;
-% 
-% ax2.FontSize = ax1.FontSize;
-% ax2.FontName = ax1.FontName;
-% ax2.TickLabelInterpreter = 'latex';
-% 
-% hx = xlabel(ax2, '$x \mathbin{/} L_{x}$', 'Interpreter', 'latex');
-% hx.FontSize = ax1.XLabel.FontSize;
-% hx.FontName = ax1.XLabel.FontName;
-% 
-% ax1.Box = 'off';
-% ax2.Box = 'on';
-% ax2.YTick = [];
-% 
-% % Bottom axis (ax1): only bottom ticks
-% ax1.XRuler.TickDirection = 'in';   % optional stylistic
-% ax1.XAxisLocation = 'bottom';
-% ax1.TickLength = [0.015 0.015];    % optional tuning
-% 
-% % This is the key line:
-% ax1.XRuler.Axle.Visible = 'off';   % hides the TOP ticks of ax1
-% 
-% % Top axis (ax2): only top ticks
-% ax2.XAxisLocation = 'top';
-% ax2.XRuler.Axle.Visible = 'on';
-% 
-% % Make sure no bottom ticks from ax2
-% ax2.XRuler.SecondaryLabel.Visible = 'off'; % just in case
-% 
-% linkaxes([ax1 ax2], 'x');
-
 
 
 
@@ -1014,273 +965,11 @@ axes(ax1)
 
 
 
-%% Accumilating forcing over all 3 blocks
-
-% % Near, middle, and far regions
-% colors(1).c = '#fb8b24';
-% colors(2).c = '#d90368';
-% colors(3).c = '#820263';
-% 
-% sz = 10;
-% 
-% spreading_rate = nan(1,3);
-% 
-% clc; close all
-% fig = figure('color', 'white', 'units', 'centimeters', 'position', [5,5,13,7]);
-% tiledlayout(1,1,'padding', 'none')
-% nexttile()
-% hold on
-% lambda_offset = 0;
-% 
-% for block = 1:3
-%     x = x_theta{block};
-%     u1 = outer_mean(block).u;
-%     u2 = inner_mean(block).u;
-%     r = u2 ./ u1;
-%     ratio_parameter = (1 - r) ./ (1 + r);
-%     % theta_tmp = theta{block} * 0.08;
-% 
-%     % Skip if in the near-near wake
-%     theta_tmp = theta{block} * 0.08;
-%     if block == 1
-%         theta_tmp(x < x_cutoff) = nan;
-%         % lambda(x < x_cutoff) = nan;
-%     end
-% 
-%     % If there's a gap from the previous block, accumulate lambda
-%     % assuming r stays at the last known value across the gap
-%     if block > 1
-%         x_prev = x_theta{block-1};
-%         u1_prev = outer_mean(block-1).u;
-%         u2_prev = inner_mean(block-1).u;
-%         r_end = u2_prev(end) / u1_prev(end);
-%         r_start = r(1);
-%         r_gap = 0.5 * (r_end + r_start);  % average r across gap
-%         gap_dx = x(1) - x_prev(end);
-%         lambda_offset = lambda_offset + (1 - r_gap) / (1 + r_gap) * gap_dx;
-%     end
-% 
-%     % Integrate within this block, then shift by accumulated offset
-%     lambda = cumtrapz(x, ratio_parameter) + lambda_offset;
-% 
-%     % Update offset for next block
-%     lambda_offset = lambda(end);
-% 
-%     % ... rest of your plotting code
-%     scatter(lambda, theta_tmp, sz, 'filled', 'markerfacecolor',  colors(block).c, ...
-%             'markerfacealpha', 1, ...
-%             'HandleVisibility', 'off')
-% 
-% 
-%     fprintf('Min: %1.3f - Max %1.3f\n', min(theta_tmp), max(theta_tmp))
-%     disp(range(theta_tmp))
-% 
-%     % Fit a line: slope = C_theta
-%     P = polyfit(lambda(~isnan(theta_tmp)), theta_tmp(~isnan(theta_tmp)), 1);
-%     C_theta = P(1);
-% 
-%     spreading_rate(block) = C_theta;
-% 
-%     % Plot a line to the fit
-%     % x_plot = -0.05:0.01:0.6;
-%     perct_buff = 0.06;
-%     x_plot = linspace((1 - perct_buff) * min(lambda), (1 + perct_buff) * max(lambda), 5);
-% 
-%     if block == 1
-%         x_plot = linspace(0.4, 1.2, 5);
-%     end
-% 
-%     P = plot(x_plot, polyval(P, x_plot), 'linestyle', '--', 'color', colors(block).c, 'linewidth', 1.5, 'HandleVisibility', 'off');
-%     uistack(P, 'bottom')
-% 
-%     % Annotate with the fit
-%     if block == 1
-%         label = sprintf('$C_{\\theta} \\approx 0$');
-%         % offset = [0, -0.003];
-%     else
-%         label = sprintf('$C_{\\theta} = %.4f$', spreading_rate(block));
-%         % offset = [0, -0.003];
-%     end
-% 
-%     if block == 1
-%         x_loc = 0.5;
-%         y_loc = 0.025;
-%     elseif block == 2
-%         x_loc = 1.6;
-%         y_loc = 0.035;
-%     elseif block == 3
-%         x_loc = 2.65;
-%         y_loc = 0.038;
-%     end
-% 
-%     text(x_loc, y_loc, label, ...
-%         'Interpreter', 'latex', ...
-%         'FontSize', tickFontSize, ...
-%         'Color', colors(block).c, ...
-%         'HorizontalAlignment', 'left', ...
-%         'VerticalAlignment', 'top')
-% 
-% end
-% 
-% % Legend
-% for block = 1:3
-%     label = sprintf('Block %1.0f', block);
-%     plot(nan, nan, 'Color', colors(block).c, 'Linewidth', 2, 'Displayname', label)
-% end
-% hold off
-% 
-% 
-% 
-% ax = gca;
-% ax.FontSize = tickFontSize;
-% set(gca, 'TickLabelInterpreter', 'latex');
-% 
-% xlabel('$\lambda$', 'interpreter', 'latex', 'fontsize', labelFontSize)
-% % xlabel('$\lambda = \int \frac{1 - r(x)}{1 + r(x)} dx$', 'interpreter', 'latex', 'fontsize', labelFontSize)
-% ylabel('$\theta$ [m]', 'interpreter', 'latex', 'fontsize', labelFontSize)
-% 
-% leg = legend('box', 'off', 'interpreter', 'latex', 'fontsize', tickFontSize, 'location', 'northwest');
-% leg.IconColumnWidth = 15;
-% 
-% box on
-% axis square
-% xlim([0, 4])
-% ylim([0.02, 0.06])
-% yticks(0.02:0.01:0.06)
-% xticks(0:1:4)
-
-
-
-
-
-
-
-%% Modeled relative velocity plot
-
-% clc; close all
-% fig = figure('color', 'white', 'units', 'centimeters', 'position', [5,5,13,10]);
-% tiledlayout(1,1,'padding', 'loose', 'TileSpacing', 'loose')
-% nexttile()
-% hold on
-% for block = 1:3
-%     x = x_theta{block};
-%     u1 = outer_mean(block).u;
-%     u2 = inner_mean(block).u;
-%     theta_tmp = theta{block} * 0.08;
-% 
-%     if block == 1
-%         theta_tmp(x < x_cutoff) = nan;
-%     end
-% 
-%     theta_smooth = sgolayfilt(theta_tmp, 3, 21);  % polynomial order 3, window 21
-%     dtheta_dx = gradient(theta_smooth, x * 0.08);
-% 
-%     % dtheta_dx = gradient(theta_tmp, x * 0.08);
-%     % dtheta_dx = theta_fit(1);
-%     % plot(x, dtheta_dx)
-%     % yline(theta_fit(1))
-% 
-%     r = u2 ./ u1;
-%     ratio_parameter = (1 - r) ./ (1 + r);
-%     % plot(x, spreading_rate(block) .* ratio_parameter)
-%     % plot(x, dtheta_dx ./ ratio_parameter)
-%     % plot([min(x) max(x)], [median(dtheta_dx ./ ratio_parameter) median(dtheta_dx ./ ratio_parameter)], 'color', 'black')
-% 
-%     plot(x, ratio_parameter, 'color', colors(block).c, 'linewidth', 2)
-% end
-% 
-% 
-% hold off
-% xlim([0,50])
-% ylim([0,0.2])
-% xline(x_cutoff)
-% xlabel('$x \mathbin{/} D$', 'interpreter', 'latex', 'fontsize', labelFontSize)
-% ylabel('$\frac{1 - r}{1 + r}$', 'interpreter', 'latex', 'fontsize', labelFontSize)
-% 
-% ax = gca;
-% yl = ax.YLim;
-% 
-% hshade = patch([0 x_cutoff x_cutoff 0], ...
-%                [yl(1) yl(1) yl(2) yl(2)], ...
-%                [0.7 0.7 0.7], ...      % gray color (change if you want)
-%                'FaceAlpha', 0.4, ...   % transparency
-%                'EdgeColor', 'none', ...
-%                'HandleVisibility', 'off');
-% 
-% % Send it behind everything
-% uistack(hshade, 'bottom');
-% 
-% 
-% ax = gca;
-% ax.FontSize = tickFontSize;
-% set(gca, 'TickLabelInterpreter', 'latex');
-% 
-% % Add x axis scales by farm length
-% % Main/bottom axis
-% ax1 = gca;
-% ax1.FontSize = tickFontSize;
-% ax1.TickLabelInterpreter = 'latex';
-% ax1.Box = 'off';
-% 
-% % Define alternate top-axis scaling
-% % Example: top axis is x normalized by lambda instead of D
-% D = 0.15;          % rotor diameter [m]
-% lambda = 0.45;     % wavelength [m], example
-% scale_top = 1/63;   % since bottom x = x/D, top x = x/lambda
-% 
-% % Create transparent top axis
-% ax2 = axes('Position', ax1.Position, ...
-%            'XAxisLocation', 'top', ...
-%            'YAxisLocation', 'right', ...
-%            'Color', 'none', ...
-%            'YColor', 'none', ...
-%            'XColor', 'k');
-% 
-% % Match physical x-limits but relabel top ticks
-% ax2.XLim = ax1.XLim;
-% ax2.YLim = ax1.YLim;
-% ax2.XTick = ax1.XTick;
-% 
-% xt = ax1.XTick * scale_top;
-% 
-% labels = strings(size(xt));
-% for i = 1:numel(xt)
-%     if abs(xt(i)) < 1e-12   % treat as zero (robust to floating point)
-%         labels(i) = "0";
-%     else
-%         labels(i) = sprintf('%.1f', xt(i));
-%     end
-% end
-% 
-% ax2.XTickLabel = labels;
-% 
-% ax2.FontSize = tickFontSize;
-% ax2.TickLabelInterpreter = 'latex';
-% 
-% 
-% % Set top xlabel
-% hx = xlabel(ax2, '$x \mathbin{/} L_{x}$', ...
-%     'Interpreter', 'latex');
-% 
-% % Force consistency
-% hx.FontSize = ax1.XLabel.FontSize;   % match bottom label exactly
-% hx.FontName = ax1.XLabel.FontName;   % match font
-% hx.Units = 'normalized';
-% 
-% ax2.Box = 'on';
-% ax2.LineWidth = ax1.LineWidth;   % match thickness
-% 
-% ax1.Box = 'on';
-% ax1.LineWidth = ax1.LineWidth;   % match thickness
-% 
-% % Optional: fine-tune vertical position if needed
-% % hx.Position(2) = 1.05;  % adjust spacing above axis
-% 
-% % Keep axes aligned if figure changes
-% linkaxes([ax1 ax2], 'xy');
-
 
 %% Combining the (1-r)/(1+r) plots with the C_{\theta} plot
+
+
+sz = 10;
 
 clc; close all
 fig = figure('color', 'white', 'units', 'centimeters', 'position', [5,5,13,8]);
@@ -1645,6 +1334,7 @@ close all
 
 
 %% Try scaling profiles with all the computed values (all blocks overlayed)
+% Optimized Tanh() + Erf()
 %%% PAPER FIGURE
 
 
@@ -1653,18 +1343,23 @@ colors(1).c = '#fb8b24';
 colors(2).c = '#d90368';
 colors(3).c = '#820263';
 
+% colors(1).c = '#6909C2';
+% colors(2).c = '#B033C4';
+% colors(3).c = '#C883C5';
+
+line_alpha = 0.2;
 
 tanh_color_trad = '#00c49a';
 erf_color_trad = '#0218c2';
 
-tanh_color_fit = '#ffbe0a';
-erf_color_fit = '#ce95db';
+tanh_color_fit = '#00c49a';
+erf_color_fit = '#0218c2';
 
 legendLineWidth = 1.5;
 
 
 turbine = 1;
-skip = 5;
+skip = 2;
 
 clc; close all
 fig = figure('color', 'white', 'units', 'centimeters', 'position', [5,5,13,7]);
@@ -1708,7 +1403,699 @@ for block = 1:3
 
         % Scaled velocity
         u_tilde = (u_profile - u2) / (u1 - u2);
-        plot(u_tilde, eta_mom, 'color', colors(block).c, 'HandleVisibility', 'off')
+        P = plot(u_tilde, eta_mom, 'color', colors(block).c, 'HandleVisibility', 'off');
+        P.Color(4) = line_alpha;
+    end
+end
+
+
+
+% Legend
+for block = 1:3
+    label = sprintf('Block %1.0f', block);
+    plot(nan, nan, 'Color', colors(block).c, 'Linewidth', legendLineWidth, 'Displayname', label)
+end
+
+% Legend white space
+plot(nan, nan, 'color', 'white', 'displayname', ' ')
+
+% Traditional Mixing layer fit
+x_plot = -4:0.01:4;
+
+% Tanh
+plot(0.5*(1 - tanh(x_plot/2)), x_plot, 'color', tanh_color_trad, 'linewidth', 1, 'displayname', '$a = 1$', 'HandleVisibility', 'off')
+plot(nan, nan, 'color', tanh_color_trad, 'linewidth', legendLineWidth, 'displayname', '$a = 1$')
+
+% ERF
+plot(0.5*(1 - erf((sqrt(pi)/2)*x_plot)), x_plot, 'color', erf_color_trad, 'linewidth', 1, 'DisplayName', sprintf('$\\sigma = %1.3f$', 2 / sqrt(pi)), 'HandleVisibility', 'off')
+plot(nan, nan, 'color', erf_color_trad, 'linewidth', legendLineWidth, 'DisplayName', sprintf('$\\sigma = %1.3f$', 2 / sqrt(pi)))
+
+% Inset gridlines
+% Horizontal lines
+P = plot([0, 1], [0, 0], 'color', 'black', 'linewidth', 1, 'HandleVisibility', 'off');
+P.Color(4) = 0.5;
+uistack(P, 'bottom')
+
+P = plot([0, 1], [-2, -2], 'color', 'black', 'linewidth', 0.25, 'HandleVisibility', 'off');
+P.Color(4) = 0.25;
+uistack(P, 'bottom')
+
+P = plot([0, 1], [2, 2], 'color', 'black', 'linewidth', 0.25, 'HandleVisibility', 'off');
+P.Color(4) = 0.25;
+uistack(P, 'bottom')
+
+% Vertical lines
+P = plot([0.5, 0.5], [-4, 4], 'color', 'black', 'linewidth', 0.25, 'HandleVisibility', 'off');
+P.Color(4) = 0.25;
+uistack(P, 'bottom')
+
+P = plot([0.25, 0.25], [-4, 4], 'color', 'black', 'linewidth', 0.25, 'HandleVisibility', 'off');
+P.Color(4) = 0.25;
+uistack(P, 'bottom')
+
+P = plot([0.75, 0.75], [-4, 4], 'color', 'black', 'linewidth', 0.25, 'HandleVisibility', 'off');
+P.Color(4) = 0.25;
+uistack(P, 'bottom')
+
+% Define corner coordinates (x and y)
+x_square = [0 1 1 0 0];
+y_square = [-4 -4 4 4 -4];
+
+% Plot the square
+bb = plot(x_square, y_square, 'black', 'LineWidth', 1.25, 'HandleVisibility', 'off');
+uistack(bb, 'top')
+
+
+hold off
+
+% grid on
+box on
+axis square
+xlim([-0.7, 1.1])
+ylim([-5, 14])
+
+leg = legend('box', 'off', 'interpreter', 'latex', 'fontsize', tickFontSize, 'location', 'southeast');
+leg.IconColumnWidth = 15;
+yticks(-8:4:16)
+
+ax = gca;
+ax.FontSize = tickFontSize;
+set(gca, 'TickLabelInterpreter', 'latex');
+set(gca, 'YDir', 'reverse')
+
+
+
+
+
+
+
+
+
+% Side plot zoomed in
+h(2) = nexttile();
+u_all   = [];
+eta_all = [];
+
+hold on
+for block = 1:3
+
+    % Velocity data
+    u = cleaned(block).u;
+    half_width = halfwidth.massaged(block,:);
+    momentum_thickness = theta{block};
+    x = x_theta{block};
+
+    X = data(block).X;
+    Y = data(block).Y - turbine_positions(turbine);
+    y = Y(:,1);
+
+    % Bulk crop data to focus on mixing layer
+    u(Y > 3) = nan;
+
+    % Scale different profiles
+    for i = 1:skip:195
+
+        % Skip if in the near-near wake
+        if block == 1 && x(i) < x_cutoff
+            continue
+        end
+
+        u_profile = u(:, i);
+        half_width_local = half_width(i);
+        momentum_thickness_local = momentum_thickness(i);
+
+        % Local inner/outer flows
+        u1 = outer_mean(block).u(i);
+        u2 = inner_mean(block).u(i);
+
+        % Scaled coordinate
+        eta_mom = (y - half_width_local) / momentum_thickness_local;
+
+        % Scaled velocity
+        u_tilde = (u_profile - u2) / (u1 - u2);
+        P = plot(u_tilde, eta_mom, 'color', colors(block).c, 'HandleVisibility', 'off');
+        P.Color(4) = line_alpha;
+
+        % Store only data inside the zoomed-in fit region
+        fit_mask = isfinite(u_tilde) & isfinite(eta_mom) & ...
+        u_tilde >= 0 & u_tilde <= 1 & ...
+        eta_mom >= -4 & eta_mom <= 4;
+
+        u_all   = [u_all; u_tilde(fit_mask)];
+        eta_all = [eta_all; eta_mom(fit_mask)];
+    end
+end
+
+% Fits
+% Sort data by eta for cleaner plotting
+[eta_all, sort_idx] = sort(eta_all);
+u_all = u_all(sort_idx);
+
+% Force fit data to double
+eta_all = double(eta_all(:));
+u_all   = double(u_all(:));
+
+% Remove any remaining bad values
+good = isfinite(eta_all) & isfinite(u_all);
+eta_all = eta_all(good);
+u_all   = u_all(good);
+
+% -------------------------
+% Linear fit: u_tilde = a eta + b
+% -------------------------
+P_lin = polyfit(eta_all, u_all, 1);
+
+eta_fit = linspace(-4, 4, 300);
+% u_lin_fit = polyval(P_lin, eta_fit);
+
+a = P_lin(1);
+b = P_lin(2);
+
+% % Linear fit forced through (eta=0, u_tilde=0.5)
+m = eta_all \ (u_all - 0.5);
+u_lin_fit = m * eta_fit + 0.5;
+% % lin_str = sprintf('$\\tilde{u} = %.3f\\,\\eta_{\\theta} + 0.5$', m);
+lin_str = sprintf('$m = %.3f$', m);
+
+
+lin_plot = plot(u_lin_fit, eta_fit, ...
+    'color', 'black', ...
+    'LineWidth', 1.5, ...
+    'linestyle', '--', ...
+    'DisplayName', lin_str, 'HandleVisibility', 'off');
+
+plot(nan, nan, ...
+    'color', 'black', ...
+    'LineWidth', legendLineWidth, ...
+    'linestyle', '--', ...
+    'DisplayName', lin_str)
+
+% -------------------------
+% Tanh fit: u_tilde = 0.5*(1 - tanh(eta / (2*a)))
+% -------------------------
+tanh_fun = @(a, eta) 0.5*(1 - tanh(eta ./ (2*a)));
+
+% Initial guess
+a0 = 1;
+
+% Fit
+a_tanh = lsqcurvefit(tanh_fun, a0, eta_all, u_all);
+
+u_tanh_fit = tanh_fun(a_tanh, eta_fit);
+
+% tanh_str = sprintf('$\\frac{1}{2}\\left[1 - \\tanh\\left(\\frac{\\eta_{\\theta}}{%.3f}\\right)\\right]$', 2*a_tanh);
+tanh_str = sprintf('$a = %1.3f$', a_tanh);
+
+plot(u_tanh_fit, eta_fit, ...
+    'color', tanh_color_fit, ...
+    'LineWidth', 1.5, ...
+    'linestyle', ':', ...
+    'DisplayName', tanh_str, 'HandleVisibility', 'off')
+
+plot(nan, nan, ...
+    'color', tanh_color_fit, ...
+    'LineWidth', legendLineWidth, ...
+    'linestyle', ':', ...
+    'DisplayName', tanh_str)
+
+
+P = yline(0, 'color', 'black', 'linewidth', 1, 'alpha', 0.5, 'HandleVisibility', 'off');
+uistack(P, 'bottom')
+
+
+% -------------------------
+% Erf fit: u_tilde = 0.5*(1 - erf(eta / sigma))
+% -------------------------
+erf_fun = @(sigma, eta) 0.5*(1 - erf(eta ./ sigma));
+
+% Initial guess (canonical value is 2/sqrt(pi) ≈ 1.128)
+sigma0 = 2/sqrt(pi);
+
+% Fit
+sigma_erf = lsqcurvefit(erf_fun, sigma0, eta_all, u_all);
+
+u_erf_fit = erf_fun(sigma_erf, eta_fit);
+
+% erf_str = sprintf('$\\frac{1}{2}\\left[1 - \\mathrm{erf}\\left(\\frac{\\eta_{\\theta}}{%.3f}\\right)\\right]$', sigma_erf);
+erf_str = sprintf('$\\sigma = %1.3f$', sigma_erf);
+
+plot(u_erf_fit, eta_fit, ...
+    'color', erf_color_fit, ...
+    'LineWidth', 1.5, ...
+    'linestyle', ':', ...
+    'DisplayName', erf_str, 'HandleVisibility', 'off')
+
+plot(nan, nan, ...
+    'color', erf_color_fit, ...
+    'LineWidth', legendLineWidth, ...
+    'linestyle', ':', ...
+    'DisplayName', erf_str)
+
+
+uistack(lin_plot, 'top')
+hold off
+axis square
+xlim([0, 1])
+ylim([-4,4])
+xticks(0:0.25:1)
+
+uistack(findobj(ax, 'Type', 'rectangle'), 'top'); % keep border visible
+
+box on
+grid on
+leg = legend('box', 'off', 'interpreter', 'latex', 'fontsize', tickFontSize, 'location', 'northwest');
+leg.IconColumnWidth = 15;
+yticks(-8:2:16)
+
+ax = gca;
+ax.FontSize = tickFontSize;
+set(gca, 'TickLabelInterpreter', 'latex');
+set(gca, 'YDir', 'reverse')
+
+
+xlabel(tile, '$\tilde{u} = \frac{u - u_{2}}{u_{1} - u_{2}}$', 'interpreter', 'latex', 'fontsize', labelFontSize)
+ylabel(tile, '$\eta_{\theta} = \frac{z - \delta_{1/2}}{\theta}$', 'interpreter', 'latex', 'fontsize', labelFontSize)
+
+
+% Save figure
+% save_folder = '/Users/zeinsadek/Desktop/Experiments/Farm/SingleFarmPaper/MixingLayer';
+% fig_name = 'SingleFarm_MixingLayerScaling.pdf';
+% pause(3)
+% exportgraphics(fig, fullfile(save_folder, fig_name), 'resolution', 600)
+% close all
+
+
+
+
+
+
+%% Try scaling profiles with all the computed values (all blocks overlayed)
+% Optimized Tanh() + Erf() Optimized per block
+%%% PAPER FIGURE
+
+
+% Near, middle, and far regions
+colors(1).c = '#fb8b24';
+colors(2).c = '#d90368';
+colors(3).c = '#820263';
+
+% colors(1).c = '#6909C2';
+% colors(2).c = '#B033C4';
+% colors(3).c = '#C883C5';
+
+line_alpha = 0.2;
+
+tanh_color_trad = '#00c49a';
+erf_color_trad = '#0218c2';
+
+tanh_color_fit = '#00c49a';
+erf_color_fit = '#0218c2';
+
+legendLineWidth = 1.5;
+
+
+turbine = 1;
+skip = 2;
+
+clc; close all
+fig = figure('color', 'white', 'units', 'centimeters', 'position', [5,5,13,7]);
+tile = tiledlayout(1,2,'padding', 'compact', 'TileSpacing', 'compact');
+h(1) = nexttile();
+
+hold on
+for block = 1:3
+
+    % Velocity data
+    u = cleaned(block).u;
+    half_width = halfwidth.massaged(block,:);
+    momentum_thickness = theta{block};
+    x = x_theta{block};
+
+    X = data(block).X;
+    Y = data(block).Y - turbine_positions(turbine);
+    y = Y(:,1);
+
+    % Bulk crop data to focus on mixing layer
+    u(Y > 3) = nan;
+
+    % Scale different profiles
+    for i = 1:skip:195
+
+        % Skip if in the near-near wake
+        if block == 1 && x(i) < x_cutoff
+            continue
+        end
+
+        u_profile = u(:, i);
+        half_width_local = half_width(i);
+        momentum_thickness_local = momentum_thickness(i);
+
+        % Local inner/outer flows
+        u1 = outer_mean(block).u(i);
+        u2 = inner_mean(block).u(i);
+
+        % Scaled coordinate
+        eta_mom = (y - half_width_local) / momentum_thickness_local;
+
+        % Scaled velocity
+        u_tilde = (u_profile - u2) / (u1 - u2);
+        P = plot(u_tilde, eta_mom, 'color', colors(block).c, 'HandleVisibility', 'off');
+        P.Color(4) = line_alpha;
+    end
+end
+
+
+
+% Legend
+for block = 1:3
+    label = sprintf('Block %1.0f', block);
+    plot(nan, nan, 'Color', colors(block).c, 'Linewidth', legendLineWidth, 'Displayname', label)
+end
+
+% Legend white space
+plot(nan, nan, 'color', 'white', 'displayname', ' ')
+
+% Traditional Mixing layer fit
+x_plot = -4:0.01:4;
+
+% Tanh
+plot(0.5*(1 - tanh(x_plot/2)), x_plot, 'color', tanh_color_trad, 'linewidth', 1, 'displayname', '$a = 1$', 'HandleVisibility', 'off')
+plot(nan, nan, 'color', tanh_color_trad, 'linewidth', legendLineWidth, 'displayname', '$a = 1$')
+
+% ERF
+plot(0.5*(1 - erf((sqrt(pi)/2)*x_plot)), x_plot, 'color', erf_color_trad, 'linewidth', 1, 'DisplayName', sprintf('$\\sigma = %1.3f$', 2 / sqrt(pi)), 'HandleVisibility', 'off')
+plot(nan, nan, 'color', erf_color_trad, 'linewidth', legendLineWidth, 'DisplayName', sprintf('$\\sigma = %1.3f$', 2 / sqrt(pi)))
+
+% Inset gridlines
+% Horizontal lines
+P = plot([0, 1], [0, 0], 'color', 'black', 'linewidth', 1, 'HandleVisibility', 'off');
+P.Color(4) = 0.5;
+uistack(P, 'bottom')
+
+P = plot([0, 1], [-2, -2], 'color', 'black', 'linewidth', 0.25, 'HandleVisibility', 'off');
+P.Color(4) = 0.25;
+uistack(P, 'bottom')
+
+P = plot([0, 1], [2, 2], 'color', 'black', 'linewidth', 0.25, 'HandleVisibility', 'off');
+P.Color(4) = 0.25;
+uistack(P, 'bottom')
+
+% Vertical lines
+P = plot([0.5, 0.5], [-4, 4], 'color', 'black', 'linewidth', 0.25, 'HandleVisibility', 'off');
+P.Color(4) = 0.25;
+uistack(P, 'bottom')
+
+P = plot([0.25, 0.25], [-4, 4], 'color', 'black', 'linewidth', 0.25, 'HandleVisibility', 'off');
+P.Color(4) = 0.25;
+uistack(P, 'bottom')
+
+P = plot([0.75, 0.75], [-4, 4], 'color', 'black', 'linewidth', 0.25, 'HandleVisibility', 'off');
+P.Color(4) = 0.25;
+uistack(P, 'bottom')
+
+% Define corner coordinates (x and y)
+x_square = [0 1 1 0 0];
+y_square = [-4 -4 4 4 -4];
+
+% Plot the square
+bb = plot(x_square, y_square, 'black', 'LineWidth', 1.25, 'HandleVisibility', 'off');
+uistack(bb, 'top')
+
+
+hold off
+
+% grid on
+box on
+axis square
+xlim([-0.7, 1.1])
+ylim([-5, 14])
+
+leg = legend('box', 'off', 'interpreter', 'latex', 'fontsize', tickFontSize, 'location', 'southeast');
+leg.IconColumnWidth = 15;
+yticks(-8:4:16)
+
+ax = gca;
+ax.FontSize = tickFontSize;
+set(gca, 'TickLabelInterpreter', 'latex');
+set(gca, 'YDir', 'reverse')
+
+
+
+
+
+
+
+
+
+% Side plot zoomed in
+% Side plot zoomed in
+h(2) = nexttile();
+
+% Storage for per-block fit parameters
+a_tanh_block = nan(1,3);
+sigma_erf_block = nan(1,3);
+m_block = nan(1,3);
+
+hold on
+for block = 1:3
+
+    u_block   = [];
+    eta_block = [];
+
+    % Velocity data
+    u = cleaned(block).u;
+    half_width = halfwidth.massaged(block,:);
+    momentum_thickness = theta{block};
+    x = x_theta{block};
+
+    X = data(block).X;
+    Y = data(block).Y - turbine_positions(turbine);
+    y = Y(:,1);
+
+    % Bulk crop data to focus on mixing layer
+    u(Y > 3) = nan;
+
+    % Scale different profiles
+    for i = 1:skip:195
+
+        % Skip if in the near-near wake
+        if block == 1 && x(i) < x_cutoff
+            continue
+        end
+
+        u_profile = u(:, i);
+        half_width_local = half_width(i);
+        momentum_thickness_local = momentum_thickness(i);
+
+        % Local inner/outer flows
+        u1 = outer_mean(block).u(i);
+        u2 = inner_mean(block).u(i);
+
+        % Scaled coordinate
+        eta_mom = (y - half_width_local) / momentum_thickness_local;
+
+        % Scaled velocity
+        u_tilde = (u_profile - u2) / (u1 - u2);
+        P = plot(u_tilde, eta_mom, 'color', colors(block).c, 'HandleVisibility', 'off');
+        P.Color(4) = line_alpha;
+
+        % Store only data inside the zoomed-in fit region
+        fit_mask = isfinite(u_tilde) & isfinite(eta_mom) & ...
+            u_tilde >= 0 & u_tilde <= 1 & ...
+            eta_mom >= -4 & eta_mom <= 4;
+
+        u_block   = [u_block; u_tilde(fit_mask)];
+        eta_block = [eta_block; eta_mom(fit_mask)];
+    end
+
+    % Clean and sort
+    eta_block = double(eta_block(:));
+    u_block   = double(u_block(:));
+    good = isfinite(eta_block) & isfinite(u_block);
+    eta_block = eta_block(good);
+    u_block   = u_block(good);
+    [eta_block, sort_idx] = sort(eta_block);
+    u_block = u_block(sort_idx);
+
+    eta_fit = linspace(-4, 4, 300);
+
+    % ---- Linear fit forced through (eta=0, u_tilde=0.5) ----
+    m_block(block) = eta_block \ (u_block - 0.5);
+
+    % ---- Tanh fit ----
+    tanh_fun = @(a, eta) 0.5*(1 - tanh(eta ./ (2*a)));
+    a_tanh_block(block) = lsqcurvefit(tanh_fun, 1, eta_block, u_block, [], [], ...
+        optimoptions('lsqcurvefit','Display','off'));
+
+    % ---- Erf fit ----
+    erf_fun = @(sigma, eta) 0.5*(1 - erf(eta ./ sigma));
+    sigma_erf_block(block) = lsqcurvefit(erf_fun, 2/sqrt(pi), eta_block, u_block, [], [], ...
+        optimoptions('lsqcurvefit','Display','off'));
+
+    % Plot fits with block color, different line styles
+    u_tanh_fit = tanh_fun(a_tanh_block(block), eta_fit);
+    u_erf_fit  = erf_fun(sigma_erf_block(block), eta_fit);
+    u_lin_fit  = m_block(block) * eta_fit + 0.5;
+
+    plot(u_tanh_fit, eta_fit, 'color', colors(block).c, 'LineWidth', 1.5, ...
+        'linestyle', '-', 'HandleVisibility', 'off')
+    plot(u_erf_fit, eta_fit, 'color', colors(block).c, 'LineWidth', 1.5, ...
+        'linestyle', ':', 'HandleVisibility', 'off')
+    plot(u_lin_fit, eta_fit, 'color', colors(block).c, 'LineWidth', 1.5, ...
+        'linestyle', '--', 'HandleVisibility', 'off')
+end
+
+% Centerline
+P = yline(0, 'color', 'black', 'linewidth', 1, 'alpha', 0.5, 'HandleVisibility', 'off');
+uistack(P, 'bottom')
+
+% ---- Legend entries ----
+% Block colors
+for block = 1:3
+    label = sprintf('Block %1.0f', block);
+    plot(nan, nan, 'Color', colors(block).c, 'Linewidth', legendLineWidth, 'Displayname', label)
+end
+plot(nan, nan, 'color', 'white', 'displayname', ' ')  % spacer
+
+% Line style legend
+plot(nan, nan, 'color', 'k', 'LineWidth', legendLineWidth, 'linestyle', '-',  'DisplayName', 'tanh fit')
+plot(nan, nan, 'color', 'k', 'LineWidth', legendLineWidth, 'linestyle', ':',  'DisplayName', 'erf fit')
+plot(nan, nan, 'color', 'k', 'LineWidth', legendLineWidth, 'linestyle', '--', 'DisplayName', 'linear fit')
+
+hold off
+axis square
+xlim([0, 1])
+ylim([-4, 4])
+xticks(0:0.25:1)
+box on
+grid on
+leg = legend('box', 'off', 'interpreter', 'latex', 'fontsize', tickFontSize, 'location', 'northwest');
+leg.IconColumnWidth = 15;
+yticks(-8:2:16)
+
+ax = gca;
+ax.FontSize = tickFontSize;
+set(gca, 'TickLabelInterpreter', 'latex');
+set(gca, 'YDir', 'reverse')
+
+% Print fit parameters to command window
+fprintf('\n--- Per-block fit parameters ---\n')
+for block = 1:3
+    fprintf('Block %d:  a_tanh = %.4f,  sigma_erf = %.4f,  m_lin = %.4f\n', ...
+        block, a_tanh_block(block), sigma_erf_block(block), m_block(block))
+end
+
+
+
+% uistack(lin_plot, 'top')
+hold off
+axis square
+xlim([0, 1])
+ylim([-4,4])
+xticks(0:0.25:1)
+
+uistack(findobj(ax, 'Type', 'rectangle'), 'top'); % keep border visible
+
+box on
+grid on
+leg = legend('box', 'off', 'interpreter', 'latex', 'fontsize', tickFontSize, 'location', 'northwest');
+leg.IconColumnWidth = 15;
+yticks(-8:2:16)
+
+ax = gca;
+ax.FontSize = tickFontSize;
+set(gca, 'TickLabelInterpreter', 'latex');
+set(gca, 'YDir', 'reverse')
+
+
+xlabel(tile, '$\tilde{u} = \frac{u - u_{2}}{u_{1} - u_{2}}$', 'interpreter', 'latex', 'fontsize', labelFontSize)
+ylabel(tile, '$\eta_{\theta} = \frac{z - \delta_{1/2}}{\theta}$', 'interpreter', 'latex', 'fontsize', labelFontSize)
+
+
+% Save figure
+% save_folder = '/Users/zeinsadek/Desktop/Experiments/Farm/SingleFarmPaper/MixingLayer';
+% fig_name = 'SingleFarm_MixingLayerScaling.pdf';
+% pause(3)
+% exportgraphics(fig, fullfile(save_folder, fig_name), 'resolution', 600)
+% close all
+
+
+
+
+%% Try scaling profiles with all the computed values (all blocks overlayed)
+% Piecewise linear fits
+%%% PAPER FIGURE
+
+
+% Near, middle, and far regions
+colors(1).c = '#fb8b24';
+colors(2).c = '#d90368';
+colors(3).c = '#820263';
+
+% colors(1).c = '#6909C2';
+% colors(2).c = '#B033C4';
+% colors(3).c = '#C883C5';
+
+line_alpha = 0.25;
+
+tanh_color_trad = '#00c49a';
+erf_color_trad = '#0218c2';
+
+% tanh_color_fit = '#ffbe0a';
+% erf_color_fit = '#ce95db';
+tanh_color_fit = '#00c49a';
+erf_color_fit = '#0218c2';
+
+legendLineWidth = 1.5;
+
+
+turbine = 1;
+skip = 2;
+
+clc; close all
+fig = figure('color', 'white', 'units', 'centimeters', 'position', [5,5,13,7]);
+tile = tiledlayout(1,2,'padding', 'compact', 'TileSpacing', 'compact');
+h(1) = nexttile();
+
+hold on
+for block = 1:3
+
+    % Velocity data
+    u = cleaned(block).u;
+    half_width = halfwidth.massaged(block,:);
+    momentum_thickness = theta{block};
+    x = x_theta{block};
+
+    X = data(block).X;
+    Y = data(block).Y - turbine_positions(turbine);
+    y = Y(:,1);
+
+    % Bulk crop data to focus on mixing layer
+    u(Y > 3) = nan;
+
+    % Scale different profiles
+    for i = 1:skip:195
+
+        % Skip if in the near-near wake
+        if block == 1 && x(i) < x_cutoff
+            continue
+        end
+
+        u_profile = u(:, i);
+        half_width_local = half_width(i);
+        momentum_thickness_local = momentum_thickness(i);
+
+        % Local inner/outer flows
+        u1 = outer_mean(block).u(i);
+        u2 = inner_mean(block).u(i);
+
+        % Scaled coordinate
+        eta_mom = (y - half_width_local) / momentum_thickness_local;
+
+        % Scaled velocity
+        u_tilde = (u_profile - u2) / (u1 - u2);
+        P = plot(u_tilde, eta_mom, 'color', colors(block).c, 'HandleVisibility', 'off');
+        P.Color(4) = line_alpha;
     end
 end
 
@@ -1838,7 +2225,8 @@ for block = 1:3
 
         % Scaled velocity
         u_tilde = (u_profile - u2) / (u1 - u2);
-        plot(u_tilde, eta_mom, 'color', colors(block).c, 'HandleVisibility', 'off')
+        P = plot(u_tilde, eta_mom, 'color', colors(block).c, 'HandleVisibility', 'off');
+        P.Color(4) = line_alpha;
 
         % Store only data inside the zoomed-in fit region
         fit_mask = isfinite(u_tilde) & isfinite(eta_mom) & ...
@@ -1873,14 +2261,14 @@ u_all   = u_all(good);
 P_lin = polyfit(eta_all, u_all, 1);
 
 eta_fit = linspace(-4, 4, 300);
-u_lin_fit = polyval(P_lin, eta_fit);
+% u_lin_fit = polyval(P_lin, eta_fit);
 
 a = P_lin(1);
 b = P_lin(2);
 
 % % Linear fit forced through (eta=0, u_tilde=0.5)
-% m = eta_all \ (u_all - 0.5);
-% u_lin_fit = m * eta_fit + 0.5;
+m = eta_all \ (u_all - 0.5);
+u_lin_fit = m * eta_fit + 0.5;
 % % lin_str = sprintf('$\\tilde{u} = %.3f\\,\\eta_{\\theta} + 0.5$', m);
 lin_str = sprintf('$m = %.3f$', m);
 
@@ -1897,62 +2285,52 @@ plot(nan, nan, ...
     'linestyle', '--', ...
     'DisplayName', lin_str)
 
-% -------------------------
-% Tanh fit: u_tilde = 0.5*(1 - tanh(eta / (2*a)))
-% -------------------------
-tanh_fun = @(a, eta) 0.5*(1 - tanh(eta ./ (2*a)));
-
-% Initial guess
-a0 = 1;
-
-% Fit
-a_tanh = lsqcurvefit(tanh_fun, a0, eta_all, u_all);
-
-u_tanh_fit = tanh_fun(a_tanh, eta_fit);
-
-% tanh_str = sprintf('$\\frac{1}{2}\\left[1 - \\tanh\\left(\\frac{\\eta_{\\theta}}{%.3f}\\right)\\right]$', 2*a_tanh);
-tanh_str = sprintf('$a = %1.3f$', a_tanh);
-
-plot(u_tanh_fit, eta_fit, ...
-    'color', tanh_color_fit, ...
-    'LineWidth', 1.5, ...
-    'DisplayName', tanh_str, 'HandleVisibility', 'off')
-
-plot(nan, nan, ...
-    'color', tanh_color_fit, ...
-    'LineWidth', legendLineWidth, ...
-    'DisplayName', tanh_str)
 
 
-P = yline(0, 'color', 'black', 'linewidth', 1, 'alpha', 0.5, 'HandleVisibility', 'off');
-uistack(P, 'bottom')
+%%% Piece-wise linear
+% Split data into three regions
+% outer = u_all >= 0.75;
+% core  = u_all >= 0.25 & u_all < 0.55;
+% inner = u_all < 0.25;
+
+% Classify by eta
+outer = eta_all <= -1;
+core = eta_all >= -1 & eta_all <= 1;
+inner = eta_all >= 1;
 
 
-% -------------------------
-% Erf fit: u_tilde = 0.5*(1 - erf(eta / sigma))
-% -------------------------
-erf_fun = @(sigma, eta) 0.5*(1 - erf(eta ./ sigma));
+m_outer = polyfit(eta_all(outer), u_all(outer), 1);
+m_core  = polyfit(eta_all(core),  u_all(core),  1);
+m_inner = polyfit(eta_all(inner), u_all(inner), 1);
 
-% Initial guess (canonical value is 2/sqrt(pi) ≈ 1.128)
-sigma0 = 2/sqrt(pi);
 
-% Fit
-sigma_erf = lsqcurvefit(erf_fun, sigma0, eta_all, u_all);
+% Colors based on region
+inner_color = '#fee440';
+core_color = '#00bbf9';
+outer_color = '#00f5d4';
 
-u_erf_fit = erf_fun(sigma_erf, eta_fit);
+plot(nan, nan, 'color', 'white', 'displayname', ' ')
+% u = 0 - 0.25
+eta_tmp = linspace(1.25, 4, 10);
+plot(eta_tmp * m_inner(1) + m_inner(2), eta_tmp, 'color', inner_color, 'linewidth', 2, ...
+     'displayname', sprintf('$m = %1.3f$', m_inner(1)))
 
-% erf_str = sprintf('$\\frac{1}{2}\\left[1 - \\mathrm{erf}\\left(\\frac{\\eta_{\\theta}}{%.3f}\\right)\\right]$', sigma_erf);
-erf_str = sprintf('$\\sigma = %1.3f$', sigma_erf);
+% u = 0.25 - 0.75
+eta_tmp = linspace(-0.75, 0.75, 10);
+plot(eta_tmp * m_core(1) + m_core(2), eta_tmp, 'color', core_color, 'linewidth', 2, ...
+     'displayname', sprintf('$m = %1.3f$', m_core(1)))
 
-plot(u_erf_fit, eta_fit, ...
-    'color', erf_color_fit, ...
-    'LineWidth', 1.5, ...
-    'DisplayName', erf_str, 'HandleVisibility', 'off')
+% u = 0.75 - 1
+eta_tmp = linspace(-4, -1.25, 10);
+plot(eta_tmp * m_outer(1) + m_outer(2), eta_tmp, 'color', outer_color, 'linewidth', 2, ...
+     'displayname', sprintf('$m = %1.3f$', m_outer(1)))
 
-plot(nan, nan, ...
-    'color', erf_color_fit, ...
-    'LineWidth', legendLineWidth, ...
-    'DisplayName', erf_str)
+
+% Print slopes from different regions
+fprintf('\n\nInner slope: %1.3f, Core slope: %1.3f, Outer slope: %1.3f\n', m_inner(1), m_core(1), m_outer(1))
+fprintf('Total fit slope: %1.3f\n\n', m)
+
+% yline([-1, 1], 'handlevisibility', 'off')
 
 
 uistack(lin_plot, 'top')
@@ -1961,20 +2339,6 @@ axis square
 xlim([0, 1])
 ylim([-4,4])
 xticks(0:0.25:1)
-
-% P = xline(0.5, 'color', 'black', 'linewidth', 1, 'alpha', 0.5, 'HandleVisibility', 'off');
-% uistack(P, 'bottom')
-
-
-% ax = h(2);   % second tile axis
-% hold(ax, 'on')
-% 
-% rectangle(ax, ...
-%     'Position', [ax.XLim(1), ax.YLim(1), diff(ax.XLim), diff(ax.YLim)], ...
-%     'EdgeColor', 'k', ...
-%     'LineWidth', 1.5, ...
-%     'LineStyle', '-', ...
-%     'Clipping', 'off');
 
 uistack(findobj(ax, 'Type', 'rectangle'), 'top'); % keep border visible
 
@@ -1995,13 +2359,321 @@ ylabel(tile, '$\eta_{\theta} = \frac{z - \delta_{1/2}}{\theta}$', 'interpreter',
 
 
 % Save figure
-save_folder = '/Users/zeinsadek/Desktop/Experiments/Farm/SingleFarmPaper/MixingLayer';
-fig_name = 'SingleFarm_MixingLayerScaling.pdf';
-pause(3)
-exportgraphics(fig, fullfile(save_folder, fig_name), 'resolution', 600)
-close all
+% save_folder = '/Users/zeinsadek/Desktop/Experiments/Farm/SingleFarmPaper/MixingLayer';
+% fig_name = 'SingleFarm_MixingLayerScaling.pdf';
+% pause(3)
+% exportgraphics(fig, fullfile(save_folder, fig_name), 'resolution', 600)
+% close all
 
 
+
+
+%% Try scaling profiles with all the computed values (all blocks overlayed)
+% MIXING LAYER SCALED SHEAR STRESS (u'w')
+%%% PAPER FIGURE
+
+
+% Near, middle, and far regions
+colors(1).c = '#fb8b24';
+colors(2).c = '#d90368';
+colors(3).c = '#820263';
+
+% colors(1).c = '#6909C2';
+% colors(2).c = '#B033C4';
+% colors(3).c = '#C883C5';
+
+line_alpha = 0.5;
+
+tanh_color_trad = '#00c49a';
+erf_color_trad = '#0218c2';
+
+tanh_color_fit = '#00c49a';
+erf_color_fit = '#0218c2';
+
+legendLineWidth = 1.5;
+
+
+turbine = 1;
+skip = 2;
+
+clc; close all
+fig = figure('color', 'white', 'units', 'centimeters', 'position', [5,5,13,7]);
+tile = tiledlayout(1,2,'padding', 'compact', 'TileSpacing', 'compact');
+h(1) = nexttile();
+
+hold on
+for block = 1:3
+
+    % Velocity data
+    u = cleaned(block).u;
+    uv = data(block).uv;
+    half_width = halfwidth.massaged(block,:);
+    momentum_thickness = theta{block};
+    x = x_theta{block};
+
+    X = data(block).X;
+    Y = data(block).Y - turbine_positions(turbine);
+    y = Y(:,1);
+
+    % Bulk crop data to focus on mixing layer
+    uv(Y > 3) = nan;
+
+    % Scale different profiles
+    for i = 1:skip:195
+
+        % Skip if in the near-near wake
+        if block == 1 && x(i) < x_cutoff
+            continue
+        end
+
+        uv_profile = uv(:, i);
+        half_width_local = half_width(i);
+        momentum_thickness_local = momentum_thickness(i);
+
+        % Local inner/outer flows
+        u1 = outer_mean(block).u(i);
+        u2 = inner_mean(block).u(i);
+
+        % Scaled coordinate
+        eta_mom = (y - half_width_local) / momentum_thickness_local;
+
+        % Scaled velocity
+        % uv_tilde = uv_profile ./ ((u1 - u2).^2);
+        uv_tilde = uv_profile/ (u1^2);
+
+        P = plot(uv_tilde, eta_mom, 'color', colors(block).c, 'HandleVisibility', 'off');
+        P.Color(4) = line_alpha;
+    end
+end
+
+
+
+% Legend
+for block = 1:3
+    label = sprintf('Block %1.0f', block);
+    plot(nan, nan, 'Color', colors(block).c, 'Linewidth', legendLineWidth, 'Displayname', label)
+end
+
+% % Inset gridlines
+% % Horizontal lines
+% P = plot([0, 1], [0, 0], 'color', 'black', 'linewidth', 1, 'HandleVisibility', 'off');
+% P.Color(4) = 0.5;
+% uistack(P, 'bottom')
+% 
+% P = plot([0, 1], [-2, -2], 'color', 'black', 'linewidth', 0.25, 'HandleVisibility', 'off');
+% P.Color(4) = 0.25;
+% uistack(P, 'bottom')
+% 
+% P = plot([0, 1], [2, 2], 'color', 'black', 'linewidth', 0.25, 'HandleVisibility', 'off');
+% P.Color(4) = 0.25;
+% uistack(P, 'bottom')
+% 
+% % Vertical lines
+% P = plot([0.5, 0.5], [-4, 4], 'color', 'black', 'linewidth', 0.25, 'HandleVisibility', 'off');
+% P.Color(4) = 0.25;
+% uistack(P, 'bottom')
+% 
+% P = plot([0.25, 0.25], [-4, 4], 'color', 'black', 'linewidth', 0.25, 'HandleVisibility', 'off');
+% P.Color(4) = 0.25;
+% uistack(P, 'bottom')
+% 
+% P = plot([0.75, 0.75], [-4, 4], 'color', 'black', 'linewidth', 0.25, 'HandleVisibility', 'off');
+% P.Color(4) = 0.25;
+% uistack(P, 'bottom')
+
+% Define corner coordinates (x and y)
+% x_square = [0 1 1 0 0];
+% y_square = [-4 -4 4 4 -4];
+
+% x_square = [-0.25 0.5 0.5 -0.25 -0.25];
+% y_square = [-4 -4 6 6 -4];
+% 
+% % Plot the square
+% bb = plot(x_square, y_square, 'black', 'LineWidth', 1.25, 'HandleVisibility', 'off');
+% uistack(bb, 'top')
+
+
+
+box on
+axis square
+xlim([-10E-3, 10E-3])
+ylim([-4, 14])
+
+leg = legend('box', 'off', 'interpreter', 'latex', 'fontsize', tickFontSize, 'location', 'southwest');
+leg.IconColumnWidth = 15;
+yticks(-8:4:16)
+
+ax = gca;
+ax.FontSize = tickFontSize;
+set(gca, 'TickLabelInterpreter', 'latex');
+set(gca, 'YDir', 'reverse')
+
+xlabel("$\overline{u'w'} \mathbin{/} u_{\infty}^2$", 'interpreter', 'latex', 'fontsize', labelFontSize)
+ylabel('$\eta_{\theta} = \frac{z - \delta_{1/2}}{\theta}$', 'interpreter', 'latex', 'fontsize', labelFontSize)
+
+
+
+
+
+
+% Side plot of eddy viscosity
+h(2) = nexttile();
+
+% Common eta grid for averaging
+eta_common = linspace(-4, 6, 200)';
+uv_collected = [];
+
+hold on
+for block = 2:3
+
+    % Velocity data
+    u = cleaned(block).u;
+    uv = data(block).uv;
+    half_width = halfwidth.massaged(block,:);
+    momentum_thickness = theta{block};
+    x = x_theta{block};
+
+    X = data(block).X;
+    Y = data(block).Y - turbine_positions(turbine);
+    y = Y(:,1);
+
+    % Bulk crop data to focus on mixing layer
+    uv(Y > 3) = nan;
+
+    % Scale different profiles
+    for i = 1:size(uv, 2)
+
+        uv_profile = uv(:, i);
+        half_width_local = half_width(i);
+        momentum_thickness_local = momentum_thickness(i);
+
+        % Local inner/outer flows
+        u1 = outer_mean(block).u(i);
+        u2 = inner_mean(block).u(i);
+
+        % Scaled coordinate
+        eta_mom = (y - half_width_local) / momentum_thickness_local;
+
+        % Scaled stress (not normalized)
+        uv_tilde = uv_profile / (u1^2);
+
+        % Interpolate onto common eta grid
+        good = isfinite(uv_tilde) & isfinite(eta_mom);
+        if nnz(good) >= 3
+            uv_interp = interp1(eta_mom(good), uv_tilde(good), eta_common, 'linear', NaN);
+            uv_collected = [uv_collected, uv_interp];
+        end
+    end
+end
+
+% Average across all profiles
+uv_mean = mean(uv_collected, 2, 'omitnan');
+uv_std  = std(uv_collected, 0, 2, 'omitnan');
+
+% Plot mean with shaded uncertainty
+fill(h(1), [uv_mean - uv_std; flipud(uv_mean + uv_std)], ...
+     [eta_common; flipud(eta_common)], ...
+     [0.7 0.7 0.7], 'EdgeColor', 'none', 'FaceAlpha', 0.4, ...
+     'HandleVisibility', 'off')
+
+plot(h(1), uv_mean, eta_common, 'color', 'black', 'linewidth', 1, ...
+    'DisplayName', 'Mean')
+% $\langle u''w'' \rangle / u_{\infty}^2$
+hold off
+
+
+
+% Compute eddy viscosity
+% Collect mean quantities
+U1_mean    = mean([outer_mean(2).u, outer_mean(3).u], 'omitnan');
+U2_mean    = mean([inner_mean(2).u, inner_mean(3).u], 'omitnan');
+DU_mean    = U1_mean - U2_mean;
+theta_mean = mean([theta{2}, theta{3}], 'omitnan') * 0.08;  % meters
+stress_mean = mean(uv_mean(eta_common >= -4 & eta_common <= 4), 'omitnan');
+
+fprintf('=== Inputs ===\n')
+fprintf('U1      = %.3f m/s\n', U1_mean)
+fprintf('U2      = %.3f m/s\n', U2_mean)
+fprintf('DU      = %.3f m/s\n', DU_mean)
+fprintf('theta   = %.5f m\n', theta_mean)
+fprintf('stress  = %.6f (normalized by U1^2)\n', stress_mean)
+fprintf('m_outer = %.4f\n', m_outer(1))
+fprintf('m_core  = %.4f\n', m_core(1))
+fprintf('m_inner = %.4f\n', m_inner(1))
+
+fprintf('\n=== Eddy Viscosity ===\n')
+nu_T_outer = -stress_mean * U1_mean^2 * theta_mean / (DU_mean * m_outer(1));
+nu_T_core  = -stress_mean * U1_mean^2 * theta_mean / (DU_mean * m_core(1));
+nu_T_inner = -stress_mean * U1_mean^2 * theta_mean / (DU_mean * m_inner(1));
+
+fprintf('nu_T outer: %.4e m^2/s\n', nu_T_outer)
+fprintf('nu_T core:  %.4e m^2/s\n', nu_T_core)
+fprintf('nu_T inner: %.4e m^2/s\n', nu_T_inner)
+
+fprintf('\n=== Ratios ===\n')
+fprintf('outer/core: %.2f\n', nu_T_outer / nu_T_core)
+fprintf('inner/core: %.2f\n', nu_T_inner / nu_T_core)
+fprintf('inner/outer: %.2f\n', nu_T_inner / nu_T_outer)
+
+fprintf('\n=== Non-dimensional (nu_T / U1*theta) ===\n')
+fprintf('outer: %.4f\n', nu_T_outer / (U1_mean * theta_mean))
+fprintf('core:  %.4f\n', nu_T_core  / (U1_mean * theta_mean))
+fprintf('inner: %.4f\n', nu_T_inner / (U1_mean * theta_mean))
+
+
+
+% Plot eddy viscosities as a barchart
+hold on
+
+
+nu_T_vals = [nu_T_outer, nu_T_core, nu_T_inner];
+labels = {'Outer', 'Mixing', 'Inner'};
+% bar_colors = [0 0 1; 0 0 0; 1 0 0];  % blue, black, red — match piecewise fit lines
+bar_colors = [hex2rgb(outer_color); hex2rgb(core_color); hex2rgb(inner_color)];
+
+b = barh(1:3, nu_T_vals, 0.5, 'FaceColor', 'flat', 'CData', bar_colors, 'EdgeColor', 'none');
+b.FaceColor = 'flat';
+% for i = 1:3
+%     b.CData(i,:) = hex2rgb(colors(i).c);
+% end
+
+set(gca, 'YTick', 1:3, 'YTickLabel', labels)
+set(gca, 'YDir', 'reverse')  % outer on top, inner on bottom — matches spatial layout
+xlabel('$\nu_T$ [m$^2$/s]', 'interpreter', 'latex', 'fontsize', labelFontSize)
+
+% Add value labels at end of each bar
+for k = 1:3
+    text(nu_T_vals(k) + 0.001, k, sprintf('%.3f', nu_T_vals(k)), ...
+        'VerticalAlignment', 'middle', ...
+        'FontSize', tickFontSize, ...
+        'Interpreter', 'latex')
+end
+
+ax = gca;
+ax.FontSize = tickFontSize;
+set(gca, 'TickLabelInterpreter', 'latex')
+box on
+
+ax = gca;
+ax.FontSize = tickFontSize;
+set(gca, 'TickLabelInterpreter', 'latex')
+
+hold off
+axis square
+xlim([0, 0.05])
+ax = gca;
+ax.FontSize = tickFontSize;
+set(gca, 'TickLabelInterpreter', 'latex');
+set(gca, 'YDir', 'reverse')
+
+
+
+% Save figure
+% save_folder = '/Users/zeinsadek/Desktop/Experiments/Farm/SingleFarmPaper/MixingLayer';
+% fig_name = 'SingleFarm_MixingLayerScaling.pdf';
+% pause(3)
+% exportgraphics(fig, fullfile(save_folder, fig_name), 'resolution', 600)
+% close all
 
 
 
