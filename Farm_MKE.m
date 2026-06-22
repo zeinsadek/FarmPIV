@@ -266,77 +266,76 @@ set(gca, 'YDir', 'reverse')
 
 %% See what profiles look like in the far wake
 
-% Where
-block = 1;
-
-% Random idx
-idx = 14;
-
-% Quantity
-tmp = production(block).y;
-y = cleaned(block).Y(:,1);
-
-clc; close all
-figure('color', 'white')
-plot(tmp(:, idx), y)
-yline(-9)
-set(gca, 'YDir', 'reverse')
-
+% % Where
+% block = 1;
+% 
+% % Random idx
+% idx = 14;
+% 
+% % Quantity
+% tmp = production(block).y;
+% y = cleaned(block).Y(:,1);
+% 
+% clc; close all
+% figure('color', 'white')
+% plot(tmp(:, idx), y)
+% yline(-9)
+% set(gca, 'YDir', 'reverse')
 
 
 %% Near wake average around each turbine (Test)
 
-block = 1;
-turbine_center = -9;
-upper_edge = turbine_center - 1.5;
-lower_edge = turbine_center + 1.5;
-
-% Normalizing
-u_inf = 8;
-D = 0.08;
-normalization = (u_inf^3) / D;
-
-% Find index of turbine center
-X = cleaned(block).X;
-Y = cleaned(block).Y;
-y = cleaned(block).Y(:,1);
-
-[~, center_idx] = min(abs(y - turbine_center));
-[~, upper_idx] = min(abs(y - upper_edge));
-[~, lower_edge] = min(abs(y - lower_edge));
-
-
-% Crop data + coordinates
-X = X(upper_idx:lower_edge, :);
-Y = Y(upper_idx:lower_edge, :);
-
-cropped_advection_x = mean_advection(block).x(upper_idx:lower_edge, :);
-cropped_advection_y = mean_advection(block).y(upper_idx:lower_edge, :);
-
-cropped_transport_x = turbulent_transport(block).x(upper_idx:lower_edge, :);
-cropped_transport_y = turbulent_transport(block).y(upper_idx:lower_edge, :);
-
-cropped_produciton_x = production(block).x(upper_idx:lower_edge, :);
-cropped_produciton_y = production(block).y(upper_idx:lower_edge, :);
-
-
-% Average over cropped regions
-avg_advection_x = mean(cropped_advection_x, 'all', 'omitnan');
-avg_advection_y = mean(cropped_advection_y, 'all', 'omitnan');
-
-avg_transport_x = mean(cropped_transport_x, 'all', 'omitnan');
-avg_transport_y = mean(cropped_transport_y, 'all', 'omitnan');
-
-avg_production_x = mean(cropped_produciton_x, 'all', 'omitnan');
-avg_production_y = mean(cropped_produciton_y, 'all', 'omitnan');
-
-
-% Test bar chart
-tmp = [avg_advection_x, avg_advection_y; avg_transport_x, avg_transport_y; avg_production_x, avg_production_y];
-
-figure()
-bar(tmp, 'stacked')
-ylim([-20, 100])
+% block = 1;
+% turbine_center = -9;
+% upper_edge = turbine_center - 1.5;
+% lower_edge = turbine_center + 1.5;
+% 
+% % Normalizing
+% u_inf = 8;
+% D = 0.08;
+% normalization = (u_inf^3) / D;
+% 
+% % Find index of turbine center
+% X = cleaned(block).X;
+% Y = cleaned(block).Y;
+% y = cleaned(block).Y(:,1);
+% 
+% [~, center_idx] = min(abs(y - turbine_center));
+% [~, upper_idx] = min(abs(y - upper_edge));
+% [~, lower_edge] = min(abs(y - lower_edge));
+% 
+% 
+% % Crop data + coordinates
+% X = X(upper_idx:lower_edge, :);
+% Y = Y(upper_idx:lower_edge, :);
+% 
+% cropped_advection_x = mean_advection(block).x(upper_idx:lower_edge, :);
+% cropped_advection_y = mean_advection(block).y(upper_idx:lower_edge, :);
+% 
+% cropped_transport_x = turbulent_transport(block).x(upper_idx:lower_edge, :);
+% cropped_transport_y = turbulent_transport(block).y(upper_idx:lower_edge, :);
+% 
+% cropped_produciton_x = production(block).x(upper_idx:lower_edge, :);
+% cropped_produciton_y = production(block).y(upper_idx:lower_edge, :);
+% 
+% 
+% % Average over cropped regions
+% avg_advection_x = mean(cropped_advection_x, 'all', 'omitnan');
+% avg_advection_y = mean(cropped_advection_y, 'all', 'omitnan');
+% 
+% avg_transport_x = mean(cropped_transport_x, 'all', 'omitnan');
+% avg_transport_y = mean(cropped_transport_y, 'all', 'omitnan');
+% 
+% avg_production_x = mean(cropped_produciton_x, 'all', 'omitnan');
+% avg_production_y = mean(cropped_produciton_y, 'all', 'omitnan');
+% 
+% 
+% % Test bar chart
+% tmp = [avg_advection_x, avg_advection_y; avg_transport_x, avg_transport_y; avg_production_x, avg_production_y];
+% 
+% figure()
+% bar(tmp, 'stacked')
+% ylim([-20, 100])
 
 
 
@@ -348,55 +347,55 @@ ylim([-20, 100])
 turbine_centers = -9:3:3;
 block = 1;
 
-clc; close all
-figure('color', 'white', 'units', 'centimeters', 'position', [10, 10, 13, 13])
-tiledlayout(5,1, 'TileSpacing', 'compact')
-sgtitle('Near Wake MKE Budget')
+% clc; close all
+% figure('color', 'white', 'units', 'centimeters', 'position', [10, 10, 13, 13])
+% tiledlayout(5,1, 'TileSpacing', 'compact')
+% sgtitle('Near Wake MKE Budget')
 
 for i = 1:5
 
-    h(i) = nexttile;
+    % h(i) = nexttile;
 
     turbine_center = turbine_centers(i);
     upper_edge = turbine_center - 1.5;
     lower_edge = turbine_center + 1.5;
-    
+
     % Normalizing
     u_inf = 8;
     D = 0.08;
     normalization = (u_inf^3) / D;
-    
+
     % Find index of turbine center
     X = cleaned(block).X;
     Y = cleaned(block).Y;
     y = cleaned(block).Y(:,1);
-    
+
     [~, center_idx] = min(abs(y - turbine_center));
     [~, upper_idx] = min(abs(y - upper_edge));
     [~, lower_edge] = min(abs(y - lower_edge));
-    
-    
+
+
     % Crop data + coordinates
     X = X(upper_idx:lower_edge, :);
     Y = Y(upper_idx:lower_edge, :);
-    
+
     cropped_advection_x = mean_advection(block).x(upper_idx:lower_edge, :);
     cropped_advection_y = mean_advection(block).y(upper_idx:lower_edge, :);
-    
+
     cropped_transport_x = turbulent_transport(block).x(upper_idx:lower_edge, :);
     cropped_transport_y = turbulent_transport(block).y(upper_idx:lower_edge, :);
-    
+
     cropped_produciton_x = production(block).x(upper_idx:lower_edge, :);
     cropped_produciton_y = production(block).y(upper_idx:lower_edge, :);
-    
-    
+
+
     % Average over cropped regions
     avg_advection_x = mean(cropped_advection_x, 'all', 'omitnan');
     avg_advection_y = mean(cropped_advection_y, 'all', 'omitnan');
-    
+
     avg_transport_x = mean(cropped_transport_x, 'all', 'omitnan');
     avg_transport_y = mean(cropped_transport_y, 'all', 'omitnan');
-    
+
     avg_production_x = mean(cropped_produciton_x, 'all', 'omitnan');
     avg_production_y = mean(cropped_produciton_y, 'all', 'omitnan');
 
@@ -409,27 +408,27 @@ for i = 1:5
 
     near_wake_MKE(i).production_x = avg_production_x;
     near_wake_MKE(i).production_y = avg_production_y;
-    
-    
+
+
     % Test bar chart
     tmp = [avg_advection_x, avg_advection_y; avg_transport_x, avg_transport_y; avg_production_x, avg_production_y];
-    
 
-    barh({'$\mathcal{A}$', '$\mathcal{T}$', '$\mathcal{P}$'}, tmp, 'stacked')
-    xlim([-12, 65])
 
-    set(gca, 'YTickLabel', {'$\mathcal{A}$', '$\mathcal{T}$', '$\mathcal{P}$'}, 'TickLabelInterpreter', 'latex');
-    
-    % axis square
-    title(sprintf('Turbine %1.0f: $z/D = %1.0f$', i, turbine_center), 'interpreter', 'latex')
-
-    if i < 4
-        % yticklabels({})
-        xticklabels({})
-    end
+    % barh({'$\mathcal{A}$', '$\mathcal{T}$', '$\mathcal{P}$'}, tmp, 'stacked')
+    % xlim([-12, 65])
+    % 
+    % set(gca, 'YTickLabel', {'$\mathcal{A}$', '$\mathcal{T}$', '$\mathcal{P}$'}, 'TickLabelInterpreter', 'latex');
+    % 
+    % % axis square
+    % title(sprintf('Turbine %1.0f: $z/D = %1.0f$', i, turbine_center), 'interpreter', 'latex')
+    % 
+    % if i < 4
+    %     % yticklabels({})
+    %     xticklabels({})
+    % end
 end
 
-linkaxes(h, 'xy')
+% linkaxes(h, 'xy')
 
 
 
@@ -438,9 +437,9 @@ linkaxes(h, 'xy')
 %% Farm wake MKE terms
 
 
-figure('color', 'white')
-tiledlayout(1,2)
-sgtitle('Far Wake MKE Budget')
+% figure('color', 'white')
+% tiledlayout(1,2)
+% sgtitle('Far Wake MKE Budget')
 
 
 turbine_center = -9;
@@ -450,46 +449,46 @@ lower_edge = turbine_center + 1.5;
 % upper_edge = -9;
 % lower_edge = 0;
 
-    
+
 for block = 2:3
 
-    h(i) = nexttile;
+    % h(i) = nexttile;
 
     % Normalizing
     u_inf = 8;
     D = 0.08;
     normalization = (u_inf^3) / D;
-    
+
     % Find index of turbine center
     X = cleaned(block).X;
     Y = cleaned(block).Y;
     y = cleaned(block).Y(:,1);
-    
+
     [~, upper_idx] = min(abs(y - upper_edge));
     [~, lower_edge] = min(abs(y - lower_edge));
-    
-    
+
+
     % Crop data + coordinates
     X = X(upper_idx:lower_edge, :);
     Y = Y(upper_idx:lower_edge, :);
-    
+
     cropped_advection_x = mean_advection(block).x(upper_idx:lower_edge, :);
     cropped_advection_y = mean_advection(block).y(upper_idx:lower_edge, :);
-    
+
     cropped_transport_x = turbulent_transport(block).x(upper_idx:lower_edge, :);
     cropped_transport_y = turbulent_transport(block).y(upper_idx:lower_edge, :);
-    
+
     cropped_produciton_x = production(block).x(upper_idx:lower_edge, :);
     cropped_produciton_y = production(block).y(upper_idx:lower_edge, :);
-    
-    
+
+
     % Average over cropped regions
     avg_advection_x = mean(cropped_advection_x, 'all', 'omitnan');
     avg_advection_y = mean(cropped_advection_y, 'all', 'omitnan');
-    
+
     avg_transport_x = mean(cropped_transport_x, 'all', 'omitnan');
     avg_transport_y = mean(cropped_transport_y, 'all', 'omitnan');
-    
+
     avg_production_x = mean(cropped_produciton_x, 'all', 'omitnan');
     avg_production_y = mean(cropped_produciton_y, 'all', 'omitnan');
 
@@ -502,23 +501,21 @@ for block = 2:3
 
     far_wake_MKE(block).production_x = avg_production_x;
     far_wake_MKE(block).production_y = avg_production_y;
-    
-    
+
+
     % Test bar chart
     tmp = [avg_advection_x, avg_advection_y; avg_transport_x, avg_transport_y; avg_production_x, avg_production_y];
-    
-
-    bar({'Advection', 'Transport', 'Production'}, tmp, 'stacked')
-    ylim([-20, 100])
-
-    axis square
-    title(sprintf('Block %1.0f', block), 'interpreter', 'latex')
-
-    if block > 2
-        yticklabels({})
-    end
 
 
+    % bar({'Advection', 'Transport', 'Production'}, tmp, 'stacked')
+    % ylim([-20, 100])
+    % 
+    % axis square
+    % title(sprintf('Block %1.0f', block), 'interpreter', 'latex')
+    % 
+    % if block > 2
+    %     yticklabels({})
+    % end
 end
 
 
@@ -527,222 +524,219 @@ end
 
 %% Near wake average around each turbine: Plotted by term
 
-turbine_centers = -9:3:3;
-
-clear h
-
-clc; close all
-figure('color', 'white', 'units', 'centimeters', 'position', [10, 10, 13, 10])
-tiledlayout(3,2, 'TileSpacing', 'compact')
-% sgtitle('Near Wake MKE Budget')
-
-% turbine_names = {'T1', 'T2', 'T3', 'T4', 'T5'};
-turbine_names = {'$T_{\mathrm{I}$', ...
-                 '$T_{\mathrm{II}$', ...
-                 '$T_{\mathrm{III}$', ...
-                 '$T_{\mathrm{IV}$', ...
-                 '$T_{\mathrm{V}$'};
-
-% Different colors
-advection_x_color = '#005f60';
-advection_y_color = '#fd5901';
-
-transport_x_color = '#0a2344';
-transport_y_color = '#fd0363';
-
-production_x_color = '#249ea0';
-production_y_color = '#faab36';
-
-
-% Make array for data being plotted
-near_advection_tmp = nan(5,2);
-near_transport_tmp = nan(5,2);
-near_production_tmp = nan(5,2);
-
-for i = 1:5
-    near_advection_tmp(i,1) = near_wake_MKE(i).advection_x;
-    near_advection_tmp(i,2) = near_wake_MKE(i).advection_y;
-
-    near_transport_tmp(i,1) = near_wake_MKE(i).transport_x;
-    near_transport_tmp(i,2) = near_wake_MKE(i).transport_y;
-
-    near_production_tmp(i,1) = near_wake_MKE(i).production_x;
-    near_production_tmp(i,2) = near_wake_MKE(i).production_y;
-end
-
-
-%%% NEAR WAKE
-% Advection
-h(1) = nexttile(1);
-hold on
-bh = barh(turbine_names, near_advection_tmp, 'stacked');
-set(bh, 'EdgeColor', 'none');
-set(bh, 'FaceColor', 'Flat')
-
-% Colors
-bh(1).CData = hex2rgb(advection_x_color);
-bh(2).CData = hex2rgb(advection_y_color);
-hold off
-set(gca, 'YDir', 'reverse')
-set(gca, 'YTickLabel', turbine_names, 'TickLabelInterpreter', 'latex');
-ylabel('Advection', 'interpreter', 'latex')
-
-% Title
-title({'Individual wakes', '$x \mathbin{/}D = 1 \, - \, 10$'}, 'interpreter', 'latex')
-
-
-
-
-% Production
-h(3) = nexttile(3);
-hold on
-bh = barh(turbine_names, near_production_tmp, 'stacked');
-set(bh, 'EdgeColor', 'none');
-set(bh, 'FaceColor', 'Flat')
-
-% Colors
-bh(1).CData = hex2rgb(production_x_color);
-bh(2).CData = hex2rgb(production_y_color);
-hold off
-set(gca, 'YDir', 'reverse')
-set(gca, 'YTickLabel', turbine_names, 'TickLabelInterpreter', 'latex');
-ylabel('Production', 'interpreter', 'latex')
-
-
-
-% Transport
-h(2) = nexttile(5);
-hold on
-bh = barh(turbine_names, near_transport_tmp, 'stacked');
-set(bh, 'EdgeColor', 'none');
-set(bh, 'FaceColor', 'Flat')
-bh(1).ShowBaseLine = 'off';
-
-% Colors
-bh(1).CData = hex2rgb(transport_x_color);
-bh(2).CData = hex2rgb(transport_y_color);
-hold off
-set(gca, 'YDir', 'reverse')
-set(gca, 'YTickLabel', turbine_names, 'TickLabelInterpreter', 'latex');
-xlim([-12, 12])
-ylabel('Transport', 'interpreter', 'latex')
-
-
-
-
-
-%%% FAR WAKE
-far_names = {'Block 2', 'Block 3'};
-
-% Make array for data being plotted
-far_advection_tmp = nan(2,2);
-far_transport_tmp = nan(2,2);
-far_production_tmp = nan(2,2);
-
-for i = 2:3
-    far_advection_tmp(i - 1,1) = far_wake_MKE(i).advection_x;
-    far_advection_tmp(i - 1,2) = far_wake_MKE(i).advection_y;
-
-    far_transport_tmp(i - 1,1) = far_wake_MKE(i).transport_x;
-    far_transport_tmp(i - 1,2) = far_wake_MKE(i).transport_y;
-
-    far_production_tmp(i - 1,1) = far_wake_MKE(i).production_x;
-    far_production_tmp(i - 1,2) = far_wake_MKE(i).production_y;
-end
-
-
-% Advection
-h(4) = nexttile(2);
-hold on
-bh = barh(far_names, far_advection_tmp, 'stacked');
-set(bh, 'EdgeColor', 'none');
-set(bh, 'FaceColor', 'Flat')
-
-% Colors
-bh(1).CData = hex2rgb(advection_x_color);
-bh(2).CData = hex2rgb(advection_y_color);
-hold off
-set(gca, 'YDir', 'reverse')
-set(gca, 'YTickLabel', far_names, 'TickLabelInterpreter', 'latex');
-
-% Legend
-leg = legend({'$\mathcal{A}_{x}$', '$\mathcal{A}_{z}$'}, 'box', 'off', ...
-             'orientation', 'vertical', 'interpreter', 'latex', ...
-             'location', 'southeast');
-leg.IconColumnWidth = 7;
-
-% Title
-title({'Farm wake edge', '$x \mathbin{/}D = 21 \, - \, 50$'}, 'interpreter', 'latex')
-
-
-
-% Production
-h(5) = nexttile(4);
-hold on
-bh = barh(far_names, far_production_tmp, 'stacked');
-set(bh, 'EdgeColor', 'none');
-set(bh, 'FaceColor', 'Flat')
-
-% Colors
-bh(1).CData = hex2rgb(production_x_color);
-bh(2).CData = hex2rgb(production_y_color);
-hold off
-set(gca, 'YDir', 'reverse')
-set(gca, 'YTickLabel', far_names, 'TickLabelInterpreter', 'latex');
-
-% Legend
-leg = legend({'$\mathcal{P}_{x}$', '$\mathcal{P}_{z}$'}, 'box', 'off', ...
-             'orientation', 'vertical', 'interpreter', 'latex', ...
-             'location', 'east');
-leg.IconColumnWidth = 7;
-
-
-
-
-
-% Transport
-h(6) = nexttile(6);
-hold on
-bh = barh(far_names, far_transport_tmp, 'stacked');
-set(bh, 'EdgeColor', 'none');
-set(bh, 'FaceColor', 'Flat')
-bh(1).ShowBaseLine = 'off';
-
-% Colors
-bh(1).CData = hex2rgb(transport_x_color);
-bh(2).CData = hex2rgb(transport_y_color);
-hold off
-set(gca, 'YDir', 'reverse')
-set(gca, 'YTickLabel', far_names, 'TickLabelInterpreter', 'latex');
-
-% Legend
-leg = legend({'$\mathcal{T}_{x}$', '$\mathcal{T}_{z}$'}, 'box', 'off', ...
-             'orientation', 'vertical', 'interpreter', 'latex', ...
-             'location', 'east');
-leg.IconColumnWidth = 7;
-
-
-
-
-
-linkaxes([h(1), h(3)], 'x')
-xlim([0, 70])
-
-linkaxes([h(4), h(5)], 'x')
-xlim([0, 26])
-
-linkaxes([h(2), h(6)], 'x')
-xlim([-12, 12])
+% turbine_centers = -9:3:3;
+% 
+% clear h
+% 
+% clc; close all
+% figure('color', 'white', 'units', 'centimeters', 'position', [10, 10, 13, 10])
+% tiledlayout(3,2, 'TileSpacing', 'compact')
+% % sgtitle('Near Wake MKE Budget')
+% 
+% % turbine_names = {'T1', 'T2', 'T3', 'T4', 'T5'};
+% turbine_names = {'$T_{\mathrm{I}$', ...
+%                  '$T_{\mathrm{II}$', ...
+%                  '$T_{\mathrm{III}$', ...
+%                  '$T_{\mathrm{IV}$', ...
+%                  '$T_{\mathrm{V}$'};
+% 
+% % Different colors
+% advection_x_color = '#005f60';
+% advection_y_color = '#fd5901';
+% 
+% transport_x_color = '#0a2344';
+% transport_y_color = '#fd0363';
+% 
+% production_x_color = '#249ea0';
+% production_y_color = '#faab36';
+% 
+% 
+% % Make array for data being plotted
+% near_advection_tmp = nan(5,2);
+% near_transport_tmp = nan(5,2);
+% near_production_tmp = nan(5,2);
+% 
+% for i = 1:5
+%     near_advection_tmp(i,1) = near_wake_MKE(i).advection_x;
+%     near_advection_tmp(i,2) = near_wake_MKE(i).advection_y;
+% 
+%     near_transport_tmp(i,1) = near_wake_MKE(i).transport_x;
+%     near_transport_tmp(i,2) = near_wake_MKE(i).transport_y;
+% 
+%     near_production_tmp(i,1) = near_wake_MKE(i).production_x;
+%     near_production_tmp(i,2) = near_wake_MKE(i).production_y;
+% end
+% 
+% 
+% %%% NEAR WAKE
+% % Advection
+% h(1) = nexttile(1);
+% hold on
+% bh = barh(turbine_names, near_advection_tmp, 'stacked');
+% set(bh, 'EdgeColor', 'none');
+% set(bh, 'FaceColor', 'Flat')
+% 
+% % Colors
+% bh(1).CData = hex2rgb(advection_x_color);
+% bh(2).CData = hex2rgb(advection_y_color);
+% hold off
+% set(gca, 'YDir', 'reverse')
+% set(gca, 'YTickLabel', turbine_names, 'TickLabelInterpreter', 'latex');
+% ylabel('Advection', 'interpreter', 'latex')
+% 
+% % Title
+% title({'Individual wakes', '$x \mathbin{/}D = 1 \, - \, 10$'}, 'interpreter', 'latex')
+% 
+% 
+% 
+% 
+% % Production
+% h(3) = nexttile(3);
+% hold on
+% bh = barh(turbine_names, near_production_tmp, 'stacked');
+% set(bh, 'EdgeColor', 'none');
+% set(bh, 'FaceColor', 'Flat')
+% 
+% % Colors
+% bh(1).CData = hex2rgb(production_x_color);
+% bh(2).CData = hex2rgb(production_y_color);
+% hold off
+% set(gca, 'YDir', 'reverse')
+% set(gca, 'YTickLabel', turbine_names, 'TickLabelInterpreter', 'latex');
+% ylabel('Production', 'interpreter', 'latex')
+% 
+% 
+% 
+% % Transport
+% h(2) = nexttile(5);
+% hold on
+% bh = barh(turbine_names, near_transport_tmp, 'stacked');
+% set(bh, 'EdgeColor', 'none');
+% set(bh, 'FaceColor', 'Flat')
+% bh(1).ShowBaseLine = 'off';
+% 
+% % Colors
+% bh(1).CData = hex2rgb(transport_x_color);
+% bh(2).CData = hex2rgb(transport_y_color);
+% hold off
+% set(gca, 'YDir', 'reverse')
+% set(gca, 'YTickLabel', turbine_names, 'TickLabelInterpreter', 'latex');
+% xlim([-12, 12])
+% ylabel('Transport', 'interpreter', 'latex')
+% 
+% 
+% 
+% 
+% 
+% %%% FAR WAKE
+% far_names = {'Block 2', 'Block 3'};
+% 
+% % Make array for data being plotted
+% far_advection_tmp = nan(2,2);
+% far_transport_tmp = nan(2,2);
+% far_production_tmp = nan(2,2);
+% 
+% for i = 2:3
+%     far_advection_tmp(i - 1,1) = far_wake_MKE(i).advection_x;
+%     far_advection_tmp(i - 1,2) = far_wake_MKE(i).advection_y;
+% 
+%     far_transport_tmp(i - 1,1) = far_wake_MKE(i).transport_x;
+%     far_transport_tmp(i - 1,2) = far_wake_MKE(i).transport_y;
+% 
+%     far_production_tmp(i - 1,1) = far_wake_MKE(i).production_x;
+%     far_production_tmp(i - 1,2) = far_wake_MKE(i).production_y;
+% end
+% 
+% 
+% % Advection
+% h(4) = nexttile(2);
+% hold on
+% bh = barh(far_names, far_advection_tmp, 'stacked');
+% set(bh, 'EdgeColor', 'none');
+% set(bh, 'FaceColor', 'Flat')
+% 
+% % Colors
+% bh(1).CData = hex2rgb(advection_x_color);
+% bh(2).CData = hex2rgb(advection_y_color);
+% hold off
+% set(gca, 'YDir', 'reverse')
+% set(gca, 'YTickLabel', far_names, 'TickLabelInterpreter', 'latex');
+% 
+% % Legend
+% leg = legend({'$\mathcal{A}_{x}$', '$\mathcal{A}_{z}$'}, 'box', 'off', ...
+%              'orientation', 'vertical', 'interpreter', 'latex', ...
+%              'location', 'southeast');
+% leg.IconColumnWidth = 7;
+% 
+% % Title
+% title({'Farm wake edge', '$x \mathbin{/}D = 21 \, - \, 50$'}, 'interpreter', 'latex')
+% 
+% 
+% 
+% % Production
+% h(5) = nexttile(4);
+% hold on
+% bh = barh(far_names, far_production_tmp, 'stacked');
+% set(bh, 'EdgeColor', 'none');
+% set(bh, 'FaceColor', 'Flat')
+% 
+% % Colors
+% bh(1).CData = hex2rgb(production_x_color);
+% bh(2).CData = hex2rgb(production_y_color);
+% hold off
+% set(gca, 'YDir', 'reverse')
+% set(gca, 'YTickLabel', far_names, 'TickLabelInterpreter', 'latex');
+% 
+% % Legend
+% leg = legend({'$\mathcal{P}_{x}$', '$\mathcal{P}_{z}$'}, 'box', 'off', ...
+%              'orientation', 'vertical', 'interpreter', 'latex', ...
+%              'location', 'east');
+% leg.IconColumnWidth = 7;
+% 
+% 
+% 
+% 
+% 
+% % Transport
+% h(6) = nexttile(6);
+% hold on
+% bh = barh(far_names, far_transport_tmp, 'stacked');
+% set(bh, 'EdgeColor', 'none');
+% set(bh, 'FaceColor', 'Flat')
+% bh(1).ShowBaseLine = 'off';
+% 
+% % Colors
+% bh(1).CData = hex2rgb(transport_x_color);
+% bh(2).CData = hex2rgb(transport_y_color);
+% hold off
+% set(gca, 'YDir', 'reverse')
+% set(gca, 'YTickLabel', far_names, 'TickLabelInterpreter', 'latex');
+% 
+% % Legend
+% leg = legend({'$\mathcal{T}_{x}$', '$\mathcal{T}_{z}$'}, 'box', 'off', ...
+%              'orientation', 'vertical', 'interpreter', 'latex', ...
+%              'location', 'east');
+% leg.IconColumnWidth = 7;
+% 
+% linkaxes([h(1), h(3)], 'x')
+% xlim([0, 70])
+% 
+% linkaxes([h(4), h(5)], 'x')
+% xlim([0, 26])
+% 
+% linkaxes([h(2), h(6)], 'x')
+% xlim([-12, 12])
 
 
 
 
 
 %% Near wake average around each turbine: Plotted by term NEW 3x3 FORMAT
+%%% NORMALIZED
 %%% THIS ONE
 
 clc; close all
-fig = figure('color', 'white', 'units', 'centimeters', 'position', [10, 10, 13, 9]);
+fig = figure('color', 'white', 'units', 'centimeters', 'position', [10, 10, 14, 8]);
 tile = tiledlayout(3,3, 'TileSpacing', 'tight', 'padding', 'tight');
 
 % Turbine names in roman numerals
@@ -764,8 +758,15 @@ production_y_color = '#faab36';
 
 % Fontsizes
 tickFontSize = 8;
-labelFontSize = 10;
+labelFontSize = 8;
+legendFontSize = 8;
 legendIconWidth = 9;
+ylabelRotation = 0;
+
+% How we normalize
+u_inf = 8;
+D = 0.08;
+normalized = (u_inf^3) / D * 1E-3;
 
 
 % Make array for data being plotted
@@ -802,7 +803,10 @@ for i = 2:3
 end
 
 
-
+% Normalize
+near_advection_tmp = near_advection_tmp / normalized;
+near_transport_tmp = near_transport_tmp / normalized;
+near_production_tmp = near_production_tmp / normalized;
 
 
 
@@ -823,11 +827,17 @@ bh(2).CData = hex2rgb(advection_y_color);
 hold off
 set(gca, 'YDir', 'reverse')
 set(gca, 'YTickLabel', turbine_names, 'TickLabelInterpreter', 'latex');
-ylabel('Advection xx', 'interpreter', 'latex', 'fontsize', labelFontSize)
 box on
 
+% ylh1 = ylabel('$\mathcal{A}$', 'interpreter', 'latex', 'fontsize', labelFontSize, 'rotation', ylabelRotation);
+% ylh1.Position(1) = ylh1.Position(1) - 0.5; 
+
+
 % Title
-title('$1 \leq x \mathbin{/}D \leq 10$', 'interpreter', 'latex', 'fontsize', labelFontSize)
+% title('$1 \leq x \mathbin{/}D \leq 10$', 'interpreter', 'latex', 'fontsize', labelFontSize)
+title({'$1 \leq x \mathbin{/}D \leq 10$', '$0.02 \leq x \mathbin{/} L_x \leq 0.16$'}, 'interpreter', 'latex', 'fontsize', labelFontSize)
+
+
 
 
 
@@ -839,7 +849,7 @@ ax = gca;
 ax.FontSize = tickFontSize;
 
 hold on
-bh = barh(1, [far_wake_MKE(block).advection_x, far_wake_MKE(block).advection_y], 'stacked');
+bh = barh(1, [far_wake_MKE(block).advection_x / normalized, far_wake_MKE(block).advection_y / normalized], 'stacked');
 set(bh, 'EdgeColor', 'none');
 set(bh, 'FaceColor', 'Flat')
 
@@ -852,7 +862,8 @@ set(gca,'ytick',[])
 box on
 
 % Title
-title('$21 \leq x \mathbin{/}D \leq 30$', 'interpreter', 'latex', 'fontsize', labelFontSize)
+% title('$21 \leq x \mathbin{/}D \leq 30$', 'interpreter', 'latex', 'fontsize', labelFontSize)
+title({'$21 \leq x \mathbin{/}D \leq 30$', '$0.33 \leq x \mathbin{/} L_x \leq 0.48$'}, 'interpreter', 'latex', 'fontsize', labelFontSize) 
 
 
 
@@ -864,7 +875,7 @@ ax = gca;
 ax.FontSize = tickFontSize;
 
 hold on
-bh = barh(1, [far_wake_MKE(block).advection_x, far_wake_MKE(block).advection_y], 'stacked');
+bh = barh(1, [far_wake_MKE(block).advection_x / normalized, far_wake_MKE(block).advection_y / normalized], 'stacked');
 set(bh, 'EdgeColor', 'none');
 set(bh, 'FaceColor', 'Flat')
 
@@ -877,18 +888,25 @@ set(gca,'ytick',[])
 box on
 
 % Title
-title('$41 \leq x \mathbin{/}D \leq 50$', 'interpreter', 'latex', 'fontsize', labelFontSize)
+% title('$41 \leq x \mathbin{/}D \leq 50$', 'interpreter', 'latex', 'fontsize', labelFontSize)
+title({'$41 \leq x \mathbin{/}D \leq 50$', '$0.65 \leq x \mathbin{/} L_x \leq 0.79$'}, 'interpreter', 'latex', 'fontsize', labelFontSize) 
+
 
 % Legend
-leg = legend({'$\mathcal{A}_{x}$', '$\mathcal{A}_{z}$'}, 'box', 'off', ...
+leg = legend({'$\langle \mathcal{A}_{x} \rangle$', '$\langle \mathcal{A}_{z} \rangle$'}, 'box', 'off', ...
              'orientation', 'vertical', 'interpreter', 'latex', ...
-             'location', 'east', 'fontsize', labelFontSize);
+             'location', 'east', 'fontsize', legendFontSize);
 leg.IconColumnWidth = legendIconWidth;
+
+
+% Set the exponent manually to -3
+% ax = gca;
+% ax.XAxis.Exponent = 3;
 
 
 %%% Link xlims for advection
 linkaxes([h(1), h(2), h(3)], 'x')
-xlim([0, 70])
+xlim([0, 62 / normalized])
 
 
 
@@ -911,8 +929,12 @@ bh(2).CData = hex2rgb(production_y_color);
 hold off
 set(gca, 'YDir', 'reverse')
 set(gca, 'YTickLabel', turbine_names, 'TickLabelInterpreter', 'latex');
-ylabel('Production xx', 'interpreter', 'latex', 'fontsize', labelFontSize)
 box on
+
+% ylh2 = ylabel('$\mathcal{P}$', 'interpreter', 'latex', 'fontsize', labelFontSize, 'rotation', ylabelRotation);
+% ylh2.Position(1) = ylh2.Position(1) - 0.1; 
+
+
 
 
 
@@ -925,7 +947,7 @@ ax = gca;
 ax.FontSize = tickFontSize;
 
 hold on
-bh = barh(1, [far_wake_MKE(block).production_x, far_wake_MKE(block).production_y], 'stacked');
+bh = barh(1, [far_wake_MKE(block).production_x / normalized, far_wake_MKE(block).production_y / normalized], 'stacked');
 set(bh, 'EdgeColor', 'none');
 set(bh, 'FaceColor', 'Flat')
 
@@ -947,7 +969,7 @@ ax = gca;
 ax.FontSize = tickFontSize;
 
 hold on
-bh = barh(1, [far_wake_MKE(block).production_x, far_wake_MKE(block).production_y], 'stacked');
+bh = barh(1, [far_wake_MKE(block).production_x / normalized, far_wake_MKE(block).production_y / normalized], 'stacked');
 set(bh, 'EdgeColor', 'none');
 set(bh, 'FaceColor', 'Flat')
 
@@ -960,15 +982,15 @@ set(gca,'ytick',[])
 box on
 
 % Legend
-leg = legend({'$\mathcal{P}_{x}$', '$\mathcal{P}_{z}$'}, 'box', 'off', ...
+leg = legend({'$\langle \mathcal{P}_{x} \rangle$', '$\langle \mathcal{P}_{z} \rangle$'}, 'box', 'off', ...
              'orientation', 'vertical', 'interpreter', 'latex', ...
-             'location', 'east', 'fontsize', labelFontSize);
+             'location', 'east', 'fontsize', legendFontSize);
 leg.IconColumnWidth = legendIconWidth;
 
 
 %%% Link xlims for advection
 linkaxes([h(4), h(5), h(6)], 'x')
-xlim([0, 9])
+xlim([0, 9 / normalized])
 
 
 
@@ -992,9 +1014,14 @@ bh(2).CData = hex2rgb(transport_y_color);
 hold off
 set(gca, 'YDir', 'reverse')
 set(gca, 'YTickLabel', turbine_names, 'TickLabelInterpreter', 'latex');
-ylabel('Transport xx', 'interpreter', 'latex', 'fontsize', labelFontSize)
-bh(1).ShowBaseLine = 'off';
 box on
+
+% ylh3 = ylabel('$\mathcal{T}$', 'interpreter', 'latex', 'fontsize', labelFontSize, 'rotation', ylabelRotation);
+% ylh3.Position(1) = ylh3.Position(1) - 0.5; 
+
+
+bh(1).ShowBaseLine = 'off';
+xline(0, 'color', 'black', 'linewidth', 1)
 
 
 
@@ -1007,7 +1034,7 @@ ax = gca;
 ax.FontSize = tickFontSize;
 
 hold on
-bh = barh(1, [far_wake_MKE(block).transport_x, far_wake_MKE(block).transport_y], 'stacked');
+bh = barh(1, [far_wake_MKE(block).transport_x / normalized, far_wake_MKE(block).transport_y / normalized], 'stacked');
 set(bh, 'EdgeColor', 'none');
 set(bh, 'FaceColor', 'Flat')
 
@@ -1019,9 +1046,12 @@ set(gca, 'YDir', 'reverse')
 set(gca,'ytick',[])
 bh(1).ShowBaseLine = 'off';
 box on
+xline(0, 'color', 'black', 'linewidth', 1)
 
 % Xlabel for everything
-xlabel(tile, '$[m^2 \mathbin{/} s^3]$', 'interpreter', 'latex', 'fontsize', labelFontSize)
+% xlabel(tile, '$\mathcal{A}, \mathcal{P}, \mathcal{T} \,\,[D \mathbin{/} u_{\infty}^3]$', 'interpreter', 'latex', 'fontsize', labelFontSize)
+% xlabel('$\mathcal{A}, \mathcal{P}, \mathcal{T} \quad [\times 10^{-3} \; D \mathbin{/} u_\infty^3]$', 'Interpreter', 'latex', 'fontsize', labelFontSize)
+% xlabel('$\frac{\mathcal{A}, \, \mathcal{P}, \, \mathcal{T}}{u_{\infty}^3 \mathbin{/} D}$', 'Interpreter', 'latex', 'fontsize', labelFontSize)
 
 
 
@@ -1033,7 +1063,7 @@ ax = gca;
 ax.FontSize = tickFontSize;
 
 hold on
-bh = barh(1, [far_wake_MKE(block).transport_x, far_wake_MKE(block).transport_y], 'stacked');
+bh = barh(1, [far_wake_MKE(block).transport_x / normalized, far_wake_MKE(block).transport_y / normalized], 'stacked');
 set(bh, 'EdgeColor', 'none');
 set(bh, 'FaceColor', 'Flat')
 
@@ -1045,24 +1075,26 @@ set(gca, 'YDir', 'reverse')
 set(gca,'ytick',[])
 bh(1).ShowBaseLine = 'off';
 box on
+xline(0, 'color', 'black', 'linewidth', 1)
 
 % Legend
-leg = legend({'$\mathcal{T}_{x}$', '$\mathcal{T}_{z}$'}, 'box', 'off', ...
+leg = legend({'$\langle \mathcal{T}_{x} \rangle$', '$ \langle \mathcal{T}_{z} \rangle$'}, 'box', 'off', ...
              'orientation', 'vertical', 'interpreter', 'latex', ...
-             'location', 'east', 'fontsize', labelFontSize);
+             'location', 'east', 'fontsize', legendFontSize);
 leg.IconColumnWidth = legendIconWidth;
 
 
 %%% Link xlims for advection
 linkaxes([h(7), h(8), h(9)], 'x')
-xlim([-14, 14])
+xlim([-12 / normalized, 12 / normalized])
+% xticks(-1.5:0.75:1.5)
 
 
 
 % Save figure
 clc; 
 save_folder = '/Users/zeinsadek/Desktop/Experiments/Farm/SingleFarmPaper/MKE';
-figure_name = 'SingleFarmPaper_MKE_Terms.pdf';
+figure_name = 'SingleFarmPaper_MKE_Terms_Normalized.pdf';
 pause(3)
 fprintf('Saving figure...\n')
 exportgraphics(fig, fullfile(save_folder, figure_name), 'resolution', 600)
@@ -1071,13 +1103,340 @@ clc; fprintf('Figure Saved!\n')
 
 
 
+%% Near wake average around each turbine: Plotted by term NEW 3x3 FORMAT
+%%% UN-NORMALIZED
+%%% THIS ONE
 
+% clc; close all
+% fig = figure('color', 'white', 'units', 'centimeters', 'position', [10, 10, 13, 9]);
+% tile = tiledlayout(3,3, 'TileSpacing', 'tight', 'padding', 'tight');
+% 
+% % Turbine names in roman numerals
+% turbine_names = {'$T_{\mathrm{I}}$', ...
+%                  '$T_{\mathrm{II}}$', ...
+%                  '$T_{\mathrm{III}}$', ...
+%                  '$T_{\mathrm{IV}}$', ...
+%                  '$T_{\mathrm{V}}$'};
+% 
+% % Different colors
+% advection_x_color = '#005f60';
+% advection_y_color = '#fd5901';
+% 
+% transport_x_color = '#0a2344';
+% transport_y_color = '#fd0363';
+% 
+% production_x_color = '#249ea0';
+% production_y_color = '#faab36';
+% 
+% % Fontsizes
+% tickFontSize = 8;
+% labelFontSize = 10;
+% legendIconWidth = 9;
+% 
+% 
+% % Make array for data being plotted
+% near_advection_tmp = nan(5,2);
+% near_transport_tmp = nan(5,2);
+% near_production_tmp = nan(5,2);
+% 
+% for i = 1:5
+%     near_advection_tmp(i,1) = near_wake_MKE(i).advection_x;
+%     near_advection_tmp(i,2) = near_wake_MKE(i).advection_y;
+% 
+%     near_transport_tmp(i,1) = near_wake_MKE(i).transport_x;
+%     near_transport_tmp(i,2) = near_wake_MKE(i).transport_y;
+% 
+%     near_production_tmp(i,1) = near_wake_MKE(i).production_x;
+%     near_production_tmp(i,2) = near_wake_MKE(i).production_y;
+% end
+% 
+% 
+% % Make array for data being plotted
+% far_advection_tmp = nan(2,2);
+% far_transport_tmp = nan(2,2);
+% far_production_tmp = nan(2,2);
+% 
+% for i = 2:3
+%     far_advection_tmp(i - 1,1) = far_wake_MKE(i).advection_x;
+%     far_advection_tmp(i - 1,2) = far_wake_MKE(i).advection_y;
+% 
+%     far_transport_tmp(i - 1,1) = far_wake_MKE(i).transport_x;
+%     far_transport_tmp(i - 1,2) = far_wake_MKE(i).transport_y;
+% 
+%     far_production_tmp(i - 1,1) = far_wake_MKE(i).production_x;
+%     far_production_tmp(i - 1,2) = far_wake_MKE(i).production_y;
+% end
+% 
+% 
+% 
+% 
+% 
+% 
+% %%% NEAR WAKE: Advection
+% h(1) = nexttile(1);
+% set(gca, 'TickLabelInterpreter', 'latex');
+% ax = gca;
+% ax.FontSize = tickFontSize;
+% 
+% hold on
+% bh = barh(turbine_names, near_advection_tmp, 'stacked');
+% set(bh, 'EdgeColor', 'none');
+% set(bh, 'FaceColor', 'Flat')
+% 
+% % Colors
+% bh(1).CData = hex2rgb(advection_x_color);
+% bh(2).CData = hex2rgb(advection_y_color);
+% hold off
+% set(gca, 'YDir', 'reverse')
+% set(gca, 'YTickLabel', turbine_names, 'TickLabelInterpreter', 'latex');
+% ylabel('Advection xx', 'interpreter', 'latex', 'fontsize', labelFontSize)
+% box on
+% 
+% % Title
+% title('$1 \leq x \mathbin{/}D \leq 10$', 'interpreter', 'latex', 'fontsize', labelFontSize)
+% 
+% 
+% 
+% %%% Block 2: Advection
+% block = 2;
+% h(2) = nexttile(2);
+% set(gca, 'TickLabelInterpreter', 'latex');
+% ax = gca;
+% ax.FontSize = tickFontSize;
+% 
+% hold on
+% bh = barh(1, [far_wake_MKE(block).advection_x, far_wake_MKE(block).advection_y], 'stacked');
+% set(bh, 'EdgeColor', 'none');
+% set(bh, 'FaceColor', 'Flat')
+% 
+% % Colors
+% bh(1).CData = hex2rgb(advection_x_color);
+% bh(2).CData = hex2rgb(advection_y_color);
+% hold off
+% set(gca, 'YDir', 'reverse')
+% set(gca,'ytick',[])
+% box on
+% 
+% % Title
+% title('$21 \leq x \mathbin{/}D \leq 30$', 'interpreter', 'latex', 'fontsize', labelFontSize)
+% 
+% 
+% 
+% %%% Block 3: Advection
+% block = 3;
+% h(3) = nexttile(3);
+% set(gca, 'TickLabelInterpreter', 'latex');
+% ax = gca;
+% ax.FontSize = tickFontSize;
+% 
+% hold on
+% bh = barh(1, [far_wake_MKE(block).advection_x, far_wake_MKE(block).advection_y], 'stacked');
+% set(bh, 'EdgeColor', 'none');
+% set(bh, 'FaceColor', 'Flat')
+% 
+% % Colors
+% bh(1).CData = hex2rgb(advection_x_color);
+% bh(2).CData = hex2rgb(advection_y_color);
+% hold off
+% set(gca, 'YDir', 'reverse')
+% set(gca,'ytick',[])
+% box on
+% 
+% % Title
+% title('$41 \leq x \mathbin{/}D \leq 50$', 'interpreter', 'latex', 'fontsize', labelFontSize)
+% 
+% % Legend
+% leg = legend({'$\mathcal{A}_{x}$', '$\mathcal{A}_{z}$'}, 'box', 'off', ...
+%              'orientation', 'vertical', 'interpreter', 'latex', ...
+%              'location', 'east', 'fontsize', labelFontSize);
+% leg.IconColumnWidth = legendIconWidth;
+% 
+% 
+% %%% Link xlims for advection
+% linkaxes([h(1), h(2), h(3)], 'x')
+% xlim([0, 70])
+% 
+% 
+% 
+% 
+% 
+% %%% NEAR WAKE: Production
+% h(4) = nexttile(4);
+% set(gca, 'TickLabelInterpreter', 'latex');
+% ax = gca;
+% ax.FontSize = tickFontSize;
+% 
+% hold on
+% bh = barh(turbine_names, near_production_tmp, 'stacked');
+% set(bh, 'EdgeColor', 'none');
+% set(bh, 'FaceColor', 'Flat')
+% 
+% % Colors
+% bh(1).CData = hex2rgb(production_x_color);
+% bh(2).CData = hex2rgb(production_y_color);
+% hold off
+% set(gca, 'YDir', 'reverse')
+% set(gca, 'YTickLabel', turbine_names, 'TickLabelInterpreter', 'latex');
+% ylabel('Production xx', 'interpreter', 'latex', 'fontsize', labelFontSize)
+% box on
+% 
+% 
+% 
+% 
+% %%% Block 2: Production
+% block = 2;
+% h(5) = nexttile(5);
+% set(gca, 'TickLabelInterpreter', 'latex');
+% ax = gca;
+% ax.FontSize = tickFontSize;
+% 
+% hold on
+% bh = barh(1, [far_wake_MKE(block).production_x, far_wake_MKE(block).production_y], 'stacked');
+% set(bh, 'EdgeColor', 'none');
+% set(bh, 'FaceColor', 'Flat')
+% 
+% % Colors
+% bh(1).CData = hex2rgb(production_x_color);
+% bh(2).CData = hex2rgb(production_y_color);
+% hold off
+% set(gca, 'YDir', 'reverse')
+% set(gca,'ytick',[])
+% box on
+% 
+% 
+% 
+% %%% Block 3: Production
+% block = 3;
+% h(6) = nexttile(6);
+% set(gca, 'TickLabelInterpreter', 'latex');
+% ax = gca;
+% ax.FontSize = tickFontSize;
+% 
+% hold on
+% bh = barh(1, [far_wake_MKE(block).production_x, far_wake_MKE(block).production_y], 'stacked');
+% set(bh, 'EdgeColor', 'none');
+% set(bh, 'FaceColor', 'Flat')
+% 
+% % Colors
+% bh(1).CData = hex2rgb(production_x_color);
+% bh(2).CData = hex2rgb(production_y_color);
+% hold off
+% set(gca, 'YDir', 'reverse')
+% set(gca,'ytick',[])
+% box on
+% 
+% % Legend
+% leg = legend({'$\mathcal{P}_{x}$', '$\mathcal{P}_{z}$'}, 'box', 'off', ...
+%              'orientation', 'vertical', 'interpreter', 'latex', ...
+%              'location', 'east', 'fontsize', labelFontSize);
+% leg.IconColumnWidth = legendIconWidth;
+% 
+% 
+% %%% Link xlims for advection
+% linkaxes([h(4), h(5), h(6)], 'x')
+% xlim([0, 9])
+% 
+% 
+% 
+% 
+% 
+% 
+% %%% NEAR WAKE: Transport
+% h(7) = nexttile(7);
+% set(gca, 'TickLabelInterpreter', 'latex');
+% ax = gca;
+% ax.FontSize = tickFontSize;
+% 
+% hold on
+% bh = barh(turbine_names, near_transport_tmp, 'stacked');
+% set(bh, 'EdgeColor', 'none');
+% set(bh, 'FaceColor', 'Flat')
+% 
+% % Colors
+% bh(1).CData = hex2rgb(transport_x_color);
+% bh(2).CData = hex2rgb(transport_y_color);
+% hold off
+% set(gca, 'YDir', 'reverse')
+% set(gca, 'YTickLabel', turbine_names, 'TickLabelInterpreter', 'latex');
+% ylabel('Transport xx', 'interpreter', 'latex', 'fontsize', labelFontSize)
+% bh(1).ShowBaseLine = 'off';
+% box on
+% 
+% 
+% 
+% 
+% %%% Block 2: Transport
+% block = 2;
+% h(8) = nexttile(8);
+% set(gca, 'TickLabelInterpreter', 'latex');
+% ax = gca;
+% ax.FontSize = tickFontSize;
+% 
+% hold on
+% bh = barh(1, [far_wake_MKE(block).transport_x, far_wake_MKE(block).transport_y], 'stacked');
+% set(bh, 'EdgeColor', 'none');
+% set(bh, 'FaceColor', 'Flat')
+% 
+% % Colors
+% bh(1).CData = hex2rgb(transport_x_color);
+% bh(2).CData = hex2rgb(transport_y_color);
+% hold off
+% set(gca, 'YDir', 'reverse')
+% set(gca,'ytick',[])
+% bh(1).ShowBaseLine = 'off';
+% box on
+% 
+% % Xlabel for everything
+% xlabel(tile, '$[m^2 \mathbin{/} s^3]$', 'interpreter', 'latex', 'fontsize', labelFontSize)
+% 
+% 
+% 
+% %%% Block 3: Transport
+% block = 3;
+% h(9) = nexttile(9);
+% set(gca, 'TickLabelInterpreter', 'latex');
+% ax = gca;
+% ax.FontSize = tickFontSize;
+% 
+% hold on
+% bh = barh(1, [far_wake_MKE(block).transport_x, far_wake_MKE(block).transport_y], 'stacked');
+% set(bh, 'EdgeColor', 'none');
+% set(bh, 'FaceColor', 'Flat')
+% 
+% % Colors
+% bh(1).CData = hex2rgb(transport_x_color);
+% bh(2).CData = hex2rgb(transport_y_color);
+% hold off
+% set(gca, 'YDir', 'reverse')
+% set(gca,'ytick',[])
+% bh(1).ShowBaseLine = 'off';
+% box on
+% 
+% % Legend
+% leg = legend({'$\mathcal{T}_{x}$', '$\mathcal{T}_{z}$'}, 'box', 'off', ...
+%              'orientation', 'vertical', 'interpreter', 'latex', ...
+%              'location', 'east', 'fontsize', labelFontSize);
+% leg.IconColumnWidth = legendIconWidth;
+% 
+% 
+% %%% Link xlims for advection
+% linkaxes([h(7), h(8), h(9)], 'x')
+% xlim([-14, 14])
+
+% Save figure
+% clc; 
+% save_folder = '/Users/zeinsadek/Desktop/Experiments/Farm/SingleFarmPaper/MKE';
+% figure_name = 'SingleFarmPaper_MKE_Terms_UnNormalized.pdf';
+% pause(3)
+% fprintf('Saving figure...\n')
+% exportgraphics(fig, fullfile(save_folder, figure_name), 'resolution', 600)
+% clc; fprintf('Figure Saved!\n')
 
 
 %% Contour cartoon for where we draw our control volumes
 
 clc; close all
-fig = figure('color', 'white', 'units', 'centimeters', 'position', [10, 10, 12.58, 2.5]);
+fig = figure('color', 'white', 'units', 'centimeters', 'position', [10, 10, 13.95, 2.5]);
 tile = tiledlayout(1,1,'padding', 'tight');
 
 nexttile()
@@ -1117,7 +1476,8 @@ colormap(slanCM('gothic'))
 axis equal
 set(gca, 'YDir', 'reverse')
 xlabel('$x \mathbin{/} D$', 'interpreter', 'latex', 'Fontsize', labelFontSize);
-ylabel('$z \mathbin{/} D$', 'interpreter', 'latex', 'Fontsize', labelFontSize);
+% ylabel('$z \mathbin{/} D$', 'interpreter', 'latex', 'Fontsize', labelFontSize);
+ylabel('$T_i$', 'interpreter', 'latex', 'Fontsize', labelFontSize, 'Rotation', 0);
 
 % Digitized half-width fit
 halfwidth_data = readmatrix('/Users/zeinsadek/Desktop/Experiments/Farm/SingleFarmPaper/MKE/OndrejDigitized_HaldWidthFit.csv');
@@ -1150,7 +1510,7 @@ figure_name = 'SingleFarmPaper_MKE_ContourCartoon.pdf';
 pause(3)
 fprintf('Saving figure...\n')
 exportgraphics(fig, fullfile(save_folder, figure_name), 'resolution', 600)
-clc; fprintf('Figure Saved!\n')
+clc; fprintf('Figure Saved!\n'); close all
 
 
 

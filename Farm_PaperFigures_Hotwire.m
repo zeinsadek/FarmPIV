@@ -46,7 +46,7 @@ clear headers opts mean_columns std_columns csv_path csv_dir
 
 
 % Get colors for each downstream plot
-palette = 'emerald';
+palette = 'gem';
 colors = slanCM(palette, length(x_positions));
 
 % Plot properties
@@ -252,7 +252,7 @@ clear l label x_position label prandtl_measurement mean_velocity std_velocity tu
 
 
 % Get colors for each downstream plot
-palette = 'lavender';
+palette = 'gem';
 colors = slanCM(palette, length(x_positions));
 
 % Plot properties
@@ -279,8 +279,8 @@ legendIconWidth = 10;
 
 % Loop through downstream locations
 clc; close all
-ax = figure('color', 'white', 'units', 'centimeters', 'position', [10, 10, 7.5, 12]);
-tile = tiledlayout(2, 1, 'TileSpacing', 'compact', 'padding', 'compact');
+ax = figure('color', 'white', 'units', 'centimeters', 'position', [10, 10, 7.5, 10]);
+    tile = tiledlayout(2, 1, 'TileSpacing', 'tight', 'padding', 'tight');
 
 % Velocity profile
 h(1) = nexttile();
@@ -307,32 +307,17 @@ for l = 1:length(x_positions)
 end
 
 
-% Draw a turbine
-turb_x = 5.5;
-tower_offset = 0.1;
-% % Rotor
-% P = plot([turb_x turb_x], [1.5, 0.5], 'color', turbineColor, 'linewidth', 1, 'handlevisibility', 'off');
-% % P.Color(4) = turbineAlpha;
-% % Tower
-% P = plot([turb_x turb_x] + tower_offset, [1, 0], 'color', turbineColor, 'linewidth', 1, 'handlevisibility', 'off');
-% % P.Color(4) = turbineAlpha;
-% % Nacelle
-% P = plot([turb_x, turb_x + 2 * tower_offset], [1, 1], 'color', turbineColor, 'linewidth', 1, 'handlevisibility', 'off');
-% % P.Color(4) = turbineAlpha;
+% Legend empty space
+plot(nan, nan, 'color', 'white', 'displayname', ' ')
 
 % Shading rotor area
 P = patch([x_start x_end x_end x_start], [minY minY maxY maxY], ...
-      'black', 'FaceAlpha', rotorAreaAlpha, 'EdgeColor', 'none', 'handlevisibility', 'off');
-uistack(P, 'bottom')
+      'black', 'FaceAlpha', rotorAreaAlpha, 'EdgeColor', 'none', 'displayname', 'Rotor Area');
+% uistack(P, 'bottom')
 
 % Lines at top and bottom tips
 yline(1.5, 'linewidth', 0.5, 'color', 'black', 'alpha', 0.15, 'handlevisibility', 'off');
 yline(0.5, 'linewidth', 0.5, 'color', 'black', 'alpha', 0.15, 'handlevisibility', 'off');
-
-% Label for shaded region
-% plot(nan, nan, 'color', 'white', 'displayname', ' ')
-% patch([nan, nan, nan, nan], [nan nan nan nan], ...
-%       'black', 'FaceAlpha', rotorAreaAlpha, 'EdgeColor', 'none', 'displayname', 'Rotor Area');
 
 % Horizontal ticks
 for i = 2:2:10
@@ -343,14 +328,16 @@ end
 hold off
 
 % Legend
-leg = legend('location', 'northwest', 'interpreter', 'latex', 'fontsize', tickFontSize, 'box', 'off');
+leg = legend('location', 'west', 'interpreter', 'latex', 'fontsize', tickFontSize, 'box', 'off');
 leg.IconColumnWidth = legendIconWidth;
 
 % Limits and legend
-axis square
-xlim([5.2, 10])
+% axis square
+% xlim([5.2, 10])
+xlim([5.8, 10])
 ylim([0, 12])
 yticks(0:2:12)
+xticks(6:1:12)
 box on
 
 % Axes labels
@@ -423,10 +410,11 @@ hold off
 
 
 % Limits and legend
-axis square
+% axis square
 ylim([0, 12])
 yticks(0:2:12)
-xlim([0.04, 0.15])
+% xlim([0.04, 0.15])
+xlim([0.03, 0.15])
 xticks(0.05:0.03:0.2)
 box on
 
@@ -437,13 +425,13 @@ ylabel('$y \mathbin{/} D$', 'interpreter', 'latex', 'fontsize', labelFontSize)
 linkaxes(h, 'y')
 
 % Add a) and b) letters
-addPanelLabels(h, {'a', 'b'}, 'FontSize', labelFontSize, 'Offset', [-0.22, 1.1])
+addPanelLabels(h, {'a', 'b'}, 'FontSize', labelFontSize, 'Offset', [0.02, 0.96])
 
 % Save figure as png and figs
 save_path = '/Users/zeinsadek/Desktop/Experiments/Farm/SingleFarmPaper/InflowProfiles';
 clc; fprintf('Saving figures...\n')
 pause(3)
-exportgraphics(ax, fullfile(save_path, 'SingleColumn', strcat(caze, '_NoTurbine_', palette, '.pdf')), 'Resolution', 600);
+exportgraphics(ax, fullfile(save_path, 'SingleColumn', strcat(caze, '_NoTurbine_', palette, '_SingleColumn.pdf')), 'Resolution', 600);
 close all; clc; fprintf('Figure saved!\n')
 
 clear l label x_position label prandtl_measurement mean_velocity std_velocity turbulence_intensity h 
