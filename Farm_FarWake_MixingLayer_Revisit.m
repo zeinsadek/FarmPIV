@@ -497,6 +497,7 @@ for block = 1:3
 
     % Find half-width velocity
     u_inf = outer_mean(block).u;
+    % u_inf = 8.0;
     raw_center_half_velocity = half_width_factor * (raw_center_velocity + u_inf);
     massaged_center_half_velocity = half_width_factor * (massaged_center_velocity + u_inf);
 
@@ -1015,7 +1016,7 @@ sz = 10;
 
 clc; close all
 fig = figure('color', 'white', 'units', 'centimeters', 'position', [5,5,14,8]);
-tiledlayout(2,1,'padding', 'tight', 'TileSpacing', 'compact')
+tiledlayout(2,1,'padding', 'compact', 'TileSpacing', 'compact')
 ax1 = nexttile(1);
 hold(ax1, 'on')
 for block = 1:3
@@ -1039,11 +1040,11 @@ for block = 1:3
     r_fit_tmp = ratio_parameter(:);
     
     % For block 1, only fit after the cutoff if desired
-    % if block == 1
-    %     fit_mask = x_fit_tmp >= x_cutoff;
-    % else
-    %     fit_mask = true(size(x_fit_tmp));
-    % end
+    if block == 1
+        fit_mask = x_fit_tmp >= x_cutoff;
+    else
+        fit_mask = true(size(x_fit_tmp));
+    end
     
     % Remove NaNs/Infs
     fit_mask = fit_mask & isfinite(x_fit_tmp) & isfinite(r_fit_tmp);
@@ -1186,7 +1187,6 @@ leg.Position = [0.47 0.8 0.5 0.13];
 
 
 
-% pause(2)
 
 ax3 = nexttile(2);
 hold(ax3, 'on')
@@ -1201,7 +1201,8 @@ for block = 1:3
     % theta_tmp = theta{block} * 0.08;
 
     % Skip if in the near-near wake
-    theta_tmp = theta{block} * 0.08;
+    % theta_tmp = theta{block} * 0.08;
+    theta_tmp = theta{block};
     if block == 1
         theta_tmp(x < x_cutoff) = nan;
         % lambda(x < x_cutoff) = nan;
@@ -1265,13 +1266,14 @@ for block = 1:3
 
     if block == 1
         x_loc = 0.62;
-        y_loc = 0.024;
+        % y_loc = 0.024 / 0.08;
+        y_loc = 0.4;
     elseif block == 2
         x_loc = 1.6;
-        y_loc = 0.035;
+        y_loc = 0.035 / 0.08;
     elseif block == 3
         x_loc = 2.65;
-        y_loc = 0.038;
+        y_loc = 0.038 / 0.08;
     end
 
             % 'Color', colors(block).c, ...
@@ -1309,164 +1311,450 @@ ylabel('$\theta$ [m]', 'interpreter', 'latex', 'fontsize', labelFontSize)
 box on
 % axis square
 xlim([0, 4])
-ylim([0.015, 0.07])
-yticks(0.02:0.02:0.06)
+% ylim([0.015, 0.07])
+% yticks(0.02:0.02:0.06)
 xticks(0:0.5:4)
 
 
-
-% Add second x-axis above the top tile
-
-% drawnow  % important: lets tiledlayout finalize axes positions
-% 
-% % Scaling for top axis
-% scale_top = 1/63;   % example: top value = bottom value * scale_top
-% 
-% % Create transparent overlay axes on top of ax1
-% ax2 = axes(fig, ...
-%     'Position', ax1.Position, ...
-%     'XAxisLocation', 'top', ...
-%     'YAxisLocation', 'right', ...
-%     'Color', 'none', ...
-%     'YColor', 'none', ...
-%     'XColor', 'k', ...
-%     'Box', 'off');
-% 
-% % Match limits and ticks
-% ax2.XLim = ax1.XLim;
-% ax2.YLim = ax1.YLim;
-% ax2.XTick = ax1.XTick;
-% 
-% % Relabel ticks with rescaled values
-% xt = ax1.XTick * scale_top;
-% 
-% labels = strings(size(xt));
-% for i = 1:numel(xt)
-%     if abs(xt(i)) < 1e-12
-%         labels(i) = "0";
-%     else
-%         labels(i) = sprintf('%.1f', xt(i));
-%     end
-% end
-% 
-% ax2.XTickLabel = labels;
-% 
-% % Formatting
-% ax2.FontSize = tickFontSize;
-% ax2.TickLabelInterpreter = 'latex';
-% ax2.LineWidth = ax1.LineWidth;
-% 
-% xlabel(ax2, '$x \mathbin{/} L_x$', ...
-%     'Interpreter', 'latex', ...
-%     'FontSize', labelFontSize)
-% 
-% % Keep the overlay aligned if figure changes
-% linkprop([ax1 ax2], {'Position', 'XLim', 'YLim'});
+%% Mega impact plot
 
 
-% Add second x-axis above the TOP tile
-% Desired formatting:
-%   bottom axis: x/D ticks pointing inward/upward
-%   top edge:    x/D ticks pointing inward/downward
-%   top axis:    x/Lx ticks + labels pointing outward/upward
-%   box on with left/right ticks
 
-% drawnow  % lets tiledlayout finalize axes positions
-% 
-% L_over_D = 63;   % Lx / D
-% 
-% % Make ax1 the main data axis
-% axes(ax1)
-% 
-% % -------------------------
-% % Main axis: x/D on bottom, box ticks on all sides
-% % -------------------------
-% ax1.XAxisLocation = 'bottom';
-% ax1.YAxisLocation = 'left';
-% ax1.Box = 'on';
-% ax1.TickDir = 'in';
-% ax1.Layer = 'top';
-% ax1.LineWidth = 1;
-% ax1.TickLength = [0.012 0.012];
-% 
-% ax1.FontSize = tickFontSize;
-% ax1.TickLabelInterpreter = 'latex';
-% 
-% % Set bottom x/D ticks explicitly
-% ax1.XTick = 0:5:50;
-% 
-% % -------------------------
-% % Overlay axis: top x/Lx labels + outward ticks
-% % -------------------------
-% axTop = axes(fig, ...
-%     'Position', ax1.Position, ...
-%     'XAxisLocation', 'top', ...
-%     'YAxisLocation', 'right', ...
-%     'Color', 'none', ...
-%     'YColor', 'none', ...
-%     'XColor', 'k', ...
-%     'Box', 'off', ...
-%     'TickDir', 'out', ...
-%     'TickLength', ax1.TickLength, ...
-%     'LineWidth', ax1.LineWidth);
-% 
-% % Match limits
-% axTop.XLim = ax1.XLim;
-% axTop.YLim = ax1.YLim;
-% 
-% % Define top-axis values in x/Lx
-% xtop = 0:0.1:(ax1.XLim(2) / L_over_D);
-% 
-% % Convert x/Lx tick values to x/D positions
-% xtop_pos = xtop * L_over_D;
-% 
-% % Keep only visible ticks
-% valid = xtop_pos >= ax1.XLim(1) & xtop_pos <= ax1.XLim(2);
-% xtop = xtop(valid);
-% xtop_pos = xtop_pos(valid);
-% 
-% % Apply top ticks
-% axTop.XTick = xtop_pos;
-% 
-% % Format labels
-% labels = compose('%.1f', xtop);
-% labels{1} = '0';
-% axTop.XTickLabel = labels;
-% 
-% % Hide y ticks from overlay axis
-% axTop.YTick = [];
-% 
-% % Match font styling
-% axTop.FontSize = tickFontSize;
-% axTop.FontName = ax1.FontName;
-% axTop.TickLabelInterpreter = 'latex';
-% 
-% % Top label
-% hx = xlabel(axTop, '$x \mathbin{/} L_x$', ...
-%     'Interpreter', 'latex', ...
-%     'FontSize', labelFontSize);
-% 
-% hx.FontName = ax1.FontName;
-% 
-% % Force exact alignment after tiledlayout adjustment
-% axTop.Units = ax1.Units;
-% axTop.Position = ax1.Position;
-% axTop.InnerPosition = ax1.InnerPosition;
-% 
-% % Keep overlay aligned if figure changes
-% hlink = linkprop([ax1 axTop], {'Position', 'InnerPosition', 'XLim', 'YLim'});
-% setappdata(fig, 'topAxisLink_topTile', hlink);
-% 
-% % Return focus to the main axis
-% axes(ax1)
+%%% Plot Momentum Thickness
+x_cutoff = 5.45;
+fit_buff = 2.5;
 
+% Near, middle, and far regions
+colors(1).c = '#fb8b24';
+colors(2).c = '#d90368';
+colors(3).c = '#820263';
+
+
+clc; close all
+fig = figure('color', 'white', 'units', 'centimeters', 'position', [5, 5, 14, 12]);
+tiledlayout(3,1,'padding', 'compact')
+ax1 = nexttile();
+hold on
+for block = 1:3
+    x_tmp = x_theta{block};
+    data_tmp = theta{block};
+
+    data_tmp(x_tmp < x_cutoff) = nan;
+    plot(x_tmp, smoothdata(data_tmp, 'gaussian', 25), 'color', colors(block).c, 'linewidth', 3, 'handlevisibility', 'off')
+
+    % Linear fit per block
+    [~, x_cutoff_idx] = min(abs(x_tmp - x_cutoff));
+    xs_fit = x_tmp(x_cutoff_idx:end);
+    ys_fit = data_tmp(x_cutoff_idx:end);
+    
+    P = polyfit(xs_fit, ys_fit, 1);
+
+    x_fit = min(xs_fit) - fit_buff:max(xs_fit) + fit_buff;
+    
+    disp(P(1))
+    tmp = plot(x_fit, polyval(P, x_fit), 'color', 'black', 'linewidth', 1.25, 'linestyle', ':', 'handlevisibility', 'off');
+    uistack(tmp, 'bottom')
+
+    % tmp_str = sprintf('$\\frac{d \\theta}{d x} \\approx %1.3f$', P(1));
+    tmp_str = sprintf('$d \\theta \\mathbin{/} d x \\approx %1.3f$', P(1));
+
+    if block ~= 1
+        lr_shift = 0;
+    else
+        lr_shift = 2;
+    end
+
+    text(mean(x_fit) + lr_shift, polyval(P, mean(x_fit)) - 0.17, tmp_str, ...
+               'interpreter', 'latex', ...
+               'EdgeColor', 'none', 'BackgroundColor', 'none', ...
+               'Fontsize', 8, 'HorizontalAlignment', 'center');
+
+
+end
+% axis equal
+xlabel('$x \mathbin{/} D$', 'interpreter', 'latex', 'fontsize', labelFontSize)
+ylabel('$\theta \mathbin{/} D$', 'interpreter', 'latex', 'fontsize', labelFontSize)
+% grid on
+box on
+xlim([0, 51])
+% ylim([-6.5,2.5])
+ylim([0,0.8])
+
+% Fit a line through blocks 2 and 3
+xs = [x_theta{1}, x_theta{2}, x_theta{3}];
+ys = [theta{1}, theta{2}, theta{3}];
+
+
+[~, x_cutoff_idx] = min(abs(xs - x_cutoff));
+xs_fit = xs(x_cutoff_idx:end);
+ys_fit = ys(x_cutoff_idx:end);
+
+P = polyfit(xs_fit, ys_fit, 1);
+theta_fit = P;
+x_fit = x_cutoff:50;
+
+% tmp = plot(x_fit, polyval(P, x_fit), 'color', 'black', 'linestyle', '--', 'handlevisibility', 'off');
+uistack(tmp, 'bottom')
+
+% Wake merging point
+% xline(x_cutoff, 'linewidth', 1, 'handlevisibility', 'off', ...
+%       'label', sprintf('Wake merging\n$x \\mathbin{/} D \\approx %1.1f$', x_cutoff), 'interpreter', 'latex', ...
+%       'Fontsize', 8, 'LabelOrientation', 'horizontal', 'LabelVerticalAlignment', 'top', ...
+%       'LabelHorizontalAlignment', 'right')
+xline(x_cutoff, 'linewidth', 1, 'handlevisibility', 'off')
+
+text(x_cutoff + 0.4, 0.6, sprintf('Wake merging\n$x \\mathbin{/} D \\approx %1.1f$', x_cutoff), ...
+       'interpreter', 'latex', ...
+       'EdgeColor', 'none', 'BackgroundColor', 'none', ...
+       'Fontsize', 8, 'HorizontalAlignment', 'left');
+
+% Create LaTeX string for the fit
+fit_str = sprintf('$\\theta = %.3f\\,\\left(\\frac{x}{D} \\right) %+ .3f$', P(1), P(2));
+
+
+
+% Legend
+% plot(nan, nan, 'color', 'k', 'linestyle', '--', 'displayname', fit_str)
+ax = gca;
+yl = ax.YLim;
+
+
+% Shade the regions where we have data
+xmins = [1, 21, 41];
+
+for block = 1:3
+    xmin = xmins(block);
+    xmax = xmin + 9;
+
+    hshade = patch([xmin xmax xmax xmin], ...
+               [yl(1) yl(1) yl(2) yl(2)], ...
+               data_shade_color, ...   % gray color (change if you want)
+               'FaceAlpha', 1.0, ...   % transparency
+               'EdgeColor', 'none', ...
+               'HandleVisibility', 'off');
+
+    % Send it behind everything
+    uistack(hshade, 'bottom');
+end
+hold off
+
+
+ax = gca;
+ax.FontSize = tickFontSize;
+set(gca, 'TickLabelInterpreter', 'latex');
+
+
+
+
+
+
+
+ax2 = nexttile(2);
+hold(ax2, 'on')
+for block = 1:3
+    x = x_theta{block};
+    % u1 = outer_mean(block).u;
+    u1 = 8.0;
+    u2 = inner_mean(block).u;
+    theta_tmp = theta{block} * 0.08;
+
+    if block == 1
+        theta_tmp(x < x_cutoff) = nan;
+    end
+
+    theta_smooth = sgolayfilt(theta_tmp, 3, 21);
+    dtheta_dx = gradient(theta_smooth, x * 0.08);
+
+    r = u2 ./ u1;
+    ratio_parameter = (1 - r) ./ (1 + r);
+
+    % Store data for exponential fit
+    x_fit_tmp = x(:);
+    r_fit_tmp = ratio_parameter(:);
+    
+    % For block 1, only fit after the cutoff if desired
+    if block == 1
+        fit_mask = x_fit_tmp >= x_cutoff;
+    else
+        fit_mask = true(size(x_fit_tmp));
+    end
+    
+    % Remove NaNs/Infs
+    fit_mask = fit_mask & isfinite(x_fit_tmp) & isfinite(r_fit_tmp);
+    
+    x_fit_all = [x_fit_all; x_fit_tmp(fit_mask)];
+    r_fit_all = [r_fit_all; r_fit_tmp(fit_mask)];
+
+    if block == 1
+        % Individual wake region
+        [~, x_idx] = min(abs(x - x_cutoff));
+        near_x = x(1:x_idx);
+        near_r = ratio_parameter(1:x_idx);
+
+        far_x = x(x_idx:end);
+        far_r = ratio_parameter(x_idx:end);
+
+        P = plot(near_x, near_r, 'color', colors(block).c, 'linewidth', 3, 'HandleVisibility', 'off');
+        P.Color(4) = 0.25;
+
+        plot(far_x, far_r, 'color', colors(block).c, 'linewidth', 3, 'HandleVisibility', 'off');
+        
+    else
+        plot(x, ratio_parameter, 'color', colors(block).c, 'linewidth', 3, 'HandleVisibility', 'off')
+    end
+
+    % plot(x, ratio_parameter, 'color', colors(block).c, 'linewidth', 2, 'HandleVisibility', 'off')
+end
+
+% Legend
+for block = 1:3
+    label = sprintf('Block %1.0f', block);
+    plot(nan, nan, 'Color', colors(block).c, 'Linewidth', 2, 'Displayname', label)
+end
+
+
+% Sort data by x for cleaner plotting
+[x_fit_all, sort_idx] = sort(x_fit_all);
+r_fit_all = r_fit_all(sort_idx);
+
+% Exponential model:
+% ratio_parameter = a*exp(b*x) + c
+% exp_model = fittype('a*exp(b*x) + c', ...
+%     'independent', 'x', ...
+%     'coefficients', {'a', 'b', 'c'});
+
+exp_model = fittype('a*exp(b*x)', ...
+    'independent', 'x', ...
+    'coefficients', {'a', 'b'});
+
+% Initial guesses
+a0 = r_fit_all(1) - r_fit_all(end);
+b0 = -0.05;
+c0 = r_fit_all(end);
+
+fit_opts = fitoptions(exp_model);
+% fit_opts.StartPoint = [a0, b0, c0];
+fit_opts.StartPoint = [a0, b0];
+
+% Optional bounds if you expect decay toward positive asymptote
+% fit_opts.Lower = [0, -Inf, 0];
+% fit_opts.Upper = [Inf, 0, Inf];
+
+[exp_fit, gof] = fit(x_fit_all, r_fit_all, exp_model, fit_opts);
+
+% Smooth x range for fitted curve
+x_fit_line = linspace(min(x_fit_all), max(x_fit_all), 300);
+% r_fit_line = exp_fit.a .* exp(exp_fit.b .* x_fit_line) + exp_fit.c;
+r_fit_line = exp_fit.a .* exp(exp_fit.b .* x_fit_line);
+
+% Plot fit
+P = plot(ax2, x_fit_line, r_fit_line, 'k:', ...
+    'linewidth', 1.25, ...
+    'handlevisibility', 'off');
+uistack(P, 'bottom')
+
+% plot(nan, nan, 'color', 'white', 'displayname', ' ')
+% % Legend entry
+% plot(nan, nan, 'linestyle', '--', 'color', 'black', 'linewidth', 1.25, ...
+%     'displayname', sprintf('$\\frac{1 - r}{1 + r} = %.2f e^{%.2f (x / D)} + %.2f$', ...
+%     exp_fit.a, exp_fit.b, exp_fit.c))
+
+legend(ax2, 'Interpreter', 'latex', 'Location', 'best');
+
+% Display fit quality
+disp(exp_fit)
+disp(gof)
+
+% Asymptote value
+% P = yline(exp_fit.c, 'handlevisibility', 'off', 'linestyle', '--', 'color', 'black', 'LineWidth', 1, 'alpha', 0.25);
+% uistack(P, 'bottom')
+
+
+
+hold off
+box on
+xlim(ax2, [0,51])
+ylim(ax2, [0,0.2])
+xlabel(ax2, '$x \mathbin{/} D$', 'interpreter', 'latex', 'fontsize', labelFontSize)
+ylabel(ax2, '$1 - r \mathbin{/} 1 + r$', 'interpreter', 'latex', 'fontsize', labelFontSize)
+
+xline(x_cutoff, 'linewidth', 1, 'handlevisibility', 'off')
+
+text(x_cutoff + 0.4, 0.035, sprintf('Wake merging\n$x \\mathbin{/} D \\approx %1.1f$', x_cutoff), ...
+       'interpreter', 'latex', ...
+       'EdgeColor', 'none', 'BackgroundColor', 'none', ...
+       'Fontsize', 8, 'HorizontalAlignment', 'left');
+
+
+
+
+
+yl = ax2.YLim;
+
+% Shade the regions where we have data
+xmins = [1, 21, 41];
+
+for block = 1:3
+    xmin = xmins(block);
+    xmax = xmin + 9;
+
+    hshade = patch([xmin xmax xmax xmin], ...
+               [yl(1) yl(1) yl(2) yl(2)], ...
+               data_shade_color, ...   % gray color (change if you want)
+               'FaceAlpha', 1.0, ...   % transparency
+               'EdgeColor', 'none', ...
+               'HandleVisibility', 'off');
+
+    % Send it behind everything
+    uistack(hshade, 'bottom');
+end
+hold off
+
+% ax = gca;
+ax2.FontSize = tickFontSize;
+ax2.TickLabelInterpreter = 'latex';
+box(ax2, 'on')
+
+leg = legend('box', 'off', 'interpreter', 'latex', 'fontsize', tickFontSize);
+leg.IconColumnWidth = 15;
+leg.Units = 'normalized';
+
+% 3. Move the legend using [left, bottom, width, height]
+leg.Position = [0.46 0.77 0.5 0.08]; 
+
+
+
+
+
+
+ax3 = nexttile(3);
+hold(ax3, 'on')
+lambda_offset = 0;
+hold on
+for block = 1:3
+    x = x_theta{block};
+    % u1 = outer_mean(block).u;
+    u1 = 8.0;
+    u2 = inner_mean(block).u;
+    r = u2 ./ u1;
+    ratio_parameter = (1 - r) ./ (1 + r);
+    % theta_tmp = theta{block} * 0.08;
+
+    % Skip if in the near-near wake
+    % theta_tmp = theta{block} * 0.08;
+    theta_tmp = theta{block};
+    if block == 1
+        theta_tmp(x < x_cutoff) = nan;
+        % lambda(x < x_cutoff) = nan;
+    end
+
+    % If there's a gap from the previous block, accumulate lambda
+    % assuming r stays at the last known value across the gap
+    if block > 1
+        x_prev = x_theta{block-1};
+        u1_prev = outer_mean(block-1).u;
+        u2_prev = inner_mean(block-1).u;
+        r_end = u2_prev(end) / u1_prev(end);
+        r_start = r(1);
+        r_gap = 0.5 * (r_end + r_start);  % average r across gap
+        gap_dx = x(1) - x_prev(end);
+        lambda_offset = lambda_offset + (1 - r_gap) / (1 + r_gap) * gap_dx;
+    end
+
+    % Integrate within this block, then shift by accumulated offset
+    lambda = cumtrapz(x, ratio_parameter) + lambda_offset;
+
+    % Update offset for next block
+    lambda_offset = lambda(end);
+
+    % ... rest of your plotting code
+    scatter(lambda, theta_tmp, sz, 'filled', 'markerfacecolor',  colors(block).c, ...
+            'markerfacealpha', 1, ...
+            'HandleVisibility', 'off')
+
+
+    fprintf('Min: %1.3f - Max %1.3f\n', min(theta_tmp), max(theta_tmp))
+    disp(range(theta_tmp))
+
+    % Fit a line: slope = C_theta
+    P = polyfit(lambda(~isnan(theta_tmp)), theta_tmp(~isnan(theta_tmp)), 1);
+    C_theta = P(1);
+    
+    spreading_rate(block) = C_theta;
+
+    % Plot a line to the fit
+    % x_plot = -0.05:0.01:0.6;
+    perct_buff = 0.06;
+    x_plot = linspace((1 - perct_buff) * min(lambda), (1 + perct_buff) * max(lambda), 5);
+
+    if block == 1
+        x_plot = linspace(0.4, 1.2, 5);
+    end
+
+    % P = plot(x_plot, polyval(P, x_plot), 'linestyle', ':', 'color', colors(block).c, 'linewidth', 1.5, 'HandleVisibility', 'off');
+    P = plot(x_plot, polyval(P, x_plot), 'linestyle', ':', 'color', 'black', 'linewidth', 1.25, 'HandleVisibility', 'off');
+    uistack(P, 'bottom')
+
+    % Annotate with the fit
+    if block == 1
+        label = sprintf('$C_{\\theta} \\approx 0$');
+        % offset = [0, -0.003];
+    else
+        label = sprintf('$C_{\\theta} = %.4f$', spreading_rate(block));
+        % offset = [0, -0.003];
+    end
+
+    if block == 1
+        x_loc = 0.66;
+        % y_loc = 0.024 / 0.08;
+        y_loc = 0.47;
+    elseif block == 2
+        x_loc = 1.6;
+        % y_loc = 0.035 / 0.08;
+        y_loc = 0.4;
+    elseif block == 3
+        x_loc = 2.65;
+        % y_loc = 0.038 / 0.08;
+        y_loc = 0.42;
+    end
+
+            % 'Color', colors(block).c, ...
+    text(x_loc, y_loc, label, ...
+        'Interpreter', 'latex', ...
+        'FontSize', 8, ...
+        'Color', 'black', ...
+        'HorizontalAlignment', 'left', ...
+        'VerticalAlignment', 'top')
+
+end
+hold off
+
+ax = gca;
+ax.FontSize = tickFontSize;
+set(gca, 'TickLabelInterpreter', 'latex');
+xlabel('$\lambda = \displaystyle \int \frac{1 - r(x)}{1 + r(x)} \,\, dx$', ...
+       'interpreter', 'latex', 'fontsize', labelFontSize)
+ylabel('$\theta \mathbin{/} D$', 'interpreter', 'latex', 'fontsize', labelFontSize)
+
+box on
+xlim([0, 4])
+ylim([0, 0.8])
+xticks(0:0.5:4)
+
+% Add a) and b) letters
+addPanelLabels([ax1, ax2, ax3], {'a', 'b', 'c'}, 'FontSize', labelFontSize, 'Offset', [-0.08, 1.2])
 
 % Save figure
 % save_folder = '/Users/zeinsadek/Desktop/Experiments/Farm/SingleFarmPaper/MixingLayer';
-% fig_name = 'SingleFarm_SpreadingFactor.pdf';
+% fig_name = 'SingleFarm_MixingLayer_CombinedPlot.pdf';
 % pause(3)
 % exportgraphics(fig, fullfile(save_folder, fig_name), 'resolution', 600)
 % close all
+
+
+
+
+
 
 
 
@@ -2244,12 +2532,15 @@ x_plot = -4:0.01:4;
 % Tanh
 % plot(0.5*(1 - tanh(x_plot/2)), x_plot, 'color', 'blue', 'linewidth', 1, 'displayname', '$\frac{1}{2} \left[ 1 - \tanh \left( \frac{\eta_{\theta}}{2} \right) \right]$')
 plot(0.5*(1 - tanh(x_plot/2)), x_plot, 'color', tanh_color_trad, 'linewidth', 1, 'displayname', '$a = 1$', 'HandleVisibility', 'off')
-plot(nan, nan, 'color', tanh_color_trad, 'linewidth', legendLineWidth, 'displayname', '$a = 1$')
+plot(nan, nan, 'color', tanh_color_trad, 'linewidth', legendLineWidth, 'displayname', '$a = 0.5$')
 
 % ERF
 % plot(0.5*(1 - erf((sqrt(pi)/2)*x_plot)), x_plot, 'color', 'red', 'linewidth', 1, 'DisplayName', '$\frac{1}{2} \left[ 1 - erf \left( \frac{\sqrt{\pi}\eta_{\theta}}{2} \right) \right]$')
-plot(0.5*(1 - erf((sqrt(pi)/2)*x_plot)), x_plot, 'color', erf_color_trad, 'linewidth', 1, 'DisplayName', sprintf('$\\sigma = %1.3f$', 2 / sqrt(pi)), 'HandleVisibility', 'off')
-plot(nan, nan, 'color', erf_color_trad, 'linewidth', legendLineWidth, 'DisplayName', sprintf('$\\sigma = %1.3f$', 2 / sqrt(pi)))
+% plot(0.5*(1 - erf((sqrt(pi)/2)*x_plot)), x_plot, 'color', erf_color_trad, 'linewidth', 1, 'DisplayName', sprintf('$\\sigma = %1.3f$', 2 / sqrt(pi)), 'HandleVisibility', 'off')
+plot(0.5*(1 - erf(x_plot/sqrt(2*pi))), x_plot, ...
+     'color', erf_color_trad, 'linewidth', 1, ...
+     'DisplayName', sprintf('$\\sigma = %1.3f$', sqrt(2*pi)), 'HandleVisibility','off')
+plot(nan, nan, 'color', erf_color_trad, 'linewidth', legendLineWidth, 'DisplayName', sprintf('$\\sigma = %1.2f$', sqrt(2*pi)))
 
 % Inset gridlines
 % Horizontal lines
@@ -2792,11 +3083,11 @@ addPanelLabels(h, {'a', 'b'}, 'FontSize', labelFontSize, 'Offset', [0.02, 0.96])
 
 
 % Save figure
-save_folder = '/Users/zeinsadek/Desktop/Experiments/Farm/SingleFarmPaper/MixingLayer';
-fig_name = 'SingleFarm_MixingLayerScaling_Stress.pdf';
-pause(3)
-exportgraphics(fig, fullfile(save_folder, fig_name), 'resolution', 600)
-close all
+% save_folder = '/Users/zeinsadek/Desktop/Experiments/Farm/SingleFarmPaper/MixingLayer';
+% fig_name = 'SingleFarm_MixingLayerScaling_Stress.pdf';
+% pause(3)
+% exportgraphics(fig, fullfile(save_folder, fig_name), 'resolution', 600)
+% close all
 
 
 
