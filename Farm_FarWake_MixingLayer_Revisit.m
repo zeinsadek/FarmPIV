@@ -1732,7 +1732,7 @@ hold off
 ax = gca;
 ax.FontSize = tickFontSize;
 set(gca, 'TickLabelInterpreter', 'latex');
-xlabel('$\lambda = \displaystyle \int \frac{1 - r(x)}{1 + r(x)} \,\, dx$', ...
+xlabel('$\Lambda = \displaystyle \int \frac{1 - r(x)}{1 + r(x)} \,\, dx$', ...
        'interpreter', 'latex', 'fontsize', labelFontSize)
 ylabel('$\theta \mathbin{/} D$', 'interpreter', 'latex', 'fontsize', labelFontSize)
 
@@ -2595,8 +2595,10 @@ ax.FontSize = tickFontSize;
 set(gca, 'TickLabelInterpreter', 'latex');
 set(gca, 'YDir', 'reverse')
 
-xlabel('$\tilde{u} = \frac{u - u_{2}}{u_{1} - u_{2}}$', 'interpreter', 'latex', 'fontsize', labelFontSize)
-ylabel('$\eta_{\theta} = \frac{z - \delta_{1/2}}{\theta}$', 'interpreter', 'latex', 'fontsize', labelFontSize)
+% xlabel('$\tilde{u} = \frac{u - u_{2}}{u_{1} - u_{2}}$', 'interpreter', 'latex', 'fontsize', labelFontSize)
+% ylabel('$\eta_{\theta} = \frac{z - \delta_{1/2}}{\theta}$', 'interpreter', 'latex', 'fontsize', labelFontSize)
+xlabel('$\tilde{u} = \frac{\overline{u} - u_{2}}{u_{1} - u_{2}}$', 'interpreter', 'latex', 'fontsize', labelFontSize)
+ylabel('$\eta_{\theta} = \frac{z - \delta_{1/2, \, f}}{\theta}$', 'interpreter', 'latex', 'fontsize', labelFontSize)
 
 
 
@@ -2800,11 +2802,8 @@ ax.FontSize = tickFontSize;
 set(gca, 'TickLabelInterpreter', 'latex');
 set(gca, 'YDir', 'reverse')
 
-% xlabel(tile, '$\tilde{u} = \frac{u - u_{2}}{u_{1} - u_{2}}$', 'interpreter', 'latex', 'fontsize', labelFontSize)
-% ylabel(tile, '$\eta_{\theta} = \frac{z - \delta_{1/2}}{\theta}$', 'interpreter', 'latex', 'fontsize', labelFontSize)
-
-xlabel('$\tilde{u} = \frac{u - u_{2}}{u_{1} - u_{2}}$', 'interpreter', 'latex', 'fontsize', labelFontSize)
-ylabel('$\eta_{\theta} = \frac{z - \delta_{1/2}}{\theta}$', 'interpreter', 'latex', 'fontsize', labelFontSize)
+xlabel('$\tilde{u} = \frac{\overline{u} - u_{2}}{u_{1} - u_{2}}$', 'interpreter', 'latex', 'fontsize', labelFontSize)
+ylabel('$\eta_{\theta} = \frac{z - \delta_{1/2, \, f}}{\theta}$', 'interpreter', 'latex', 'fontsize', labelFontSize)
 
 
 % Add a) and b) letters
@@ -2901,8 +2900,14 @@ skip = 2;
 
 clc; close all
 fig = figure('color', 'white', 'units', 'centimeters', 'position', [5,5,7.5,12]);
-tile = tiledlayout(2, 1, 'padding', 'tight', 'TileSpacing', 'tight');
+tile = tiledlayout(2, 1, 'padding', 'tight', 'TileSpacing', 'compact');
 h(1) = nexttile();
+
+% ax = gca;
+% ax.FontSize = tickFontSize;
+% set(h(1), 'TickLabelInterpreter', 'latex', 'FontSize', tickFontSize);
+% set(h(1), 'YDir', 'reverse')
+
 
 hold on
 for block = 1:3
@@ -2976,13 +2981,13 @@ plot(h(1), uv_mean, eta_common, 'color', 'black', 'linewidth', 2, ...
     'DisplayName', "$\langle \overline{u' w'} \rangle_{x} \mathbin{/} u_{\infty}^2$")
 hold off
 
-ax = gca;
-ax.FontSize = tickFontSize;
-set(gca, 'TickLabelInterpreter', 'latex');
-set(gca, 'YDir', 'reverse')
+% First tile formatting — after all plotting
+set(h(1), 'TickLabelInterpreter', 'latex', ...
+    'FontSize', tickFontSize, 'YDir', 'reverse');
 
-xlabel("$\overline{u'w'} \mathbin{/} u_{\infty}^2$", 'interpreter', 'latex', 'fontsize', labelFontSize)
-ylabel('$\eta_{\theta} = \frac{z - \delta_{1/2}}{\theta}$', 'interpreter', 'latex', 'fontsize', labelFontSize)
+xlabel(h(1), "$\overline{u'w'} \mathbin{/} u_{\infty}^2$", 'interpreter', 'latex', 'fontsize', labelFontSize)
+% ylabel(h(1), '$\eta_{\theta} = \frac{z - \delta_{1/2, \, f}}{\theta}$', 'interpreter', 'latex', 'fontsize', labelFontSize)
+ylabel(h(1), '$\displaystyle \eta_{\theta} = \frac{z - \delta_{1/2, \, f}}{\theta}$', 'interpreter', 'latex', 'fontsize', labelFontSize)
 
 
 
@@ -2991,11 +2996,6 @@ ylabel('$\eta_{\theta} = \frac{z - \delta_{1/2}}{\theta}$', 'interpreter', 'late
 
 % Side plot of eddy viscosity
 h(2) = nexttile();
-
-
-
-
-
 
 % Compute eddy viscosity
 % Collect mean quantities
@@ -3039,11 +3039,13 @@ fprintf('inner: %.4f\n', nu_T_inner / (U1_mean * theta_mean))
 % Plot eddy viscosities as a barchart
 hold on
 
-ax = gca;
-ax.FontSize = tickFontSize;
-set(gca, 'TickLabelInterpreter', 'latex')
+% ax = gca;
+% ax.FontSize = tickFontSize;
+% set(gca, 'TickLabelInterpreter', 'latex');
+% set(gca, 'YDir', 'reverse')
+set(h(2), 'TickLabelInterpreter', 'latex', 'FontSize', tickFontSize);
+set(h(2), 'YDir', 'reverse')
 box on
-
 
 nu_T_vals = [nu_T_outer, nu_T_core, nu_T_inner];
 labels = {'Outer', 'Mixing', 'Inner'};
@@ -3052,9 +3054,8 @@ bar_colors = [hex2rgb(outer_color); hex2rgb(core_color); hex2rgb(inner_color)];
 b = barh(1:3, nu_T_vals, 0.75, 'FaceColor', 'flat', 'CData', bar_colors, 'EdgeColor', 'none');
 b.FaceColor = 'flat';
 
-
-set(gca, 'YTick', 1:3, 'YTickLabel', labels)
-set(gca, 'YDir', 'reverse')  % outer on top, inner on bottom — matches spatial layout
+set(h(2), 'YTick', 1:3, 'YTickLabel', labels)
+set(h(2), 'YDir', 'reverse')  % outer on top, inner on bottom — matches spatial layout
 
 
 % Add value labels at end of each bar
@@ -3069,12 +3070,7 @@ end
 
 hold off
 xlim([0, 0.05])
-ax = gca;
-ax.FontSize = tickFontSize;
-set(gca, 'TickLabelInterpreter', 'latex');
-set(gca, 'YDir', 'reverse')
-
-xlabel('$\nu_T$ [m$^2 \mathbin{/}$ s]', 'interpreter', 'latex', 'fontsize', labelFontSize)
+xlabel(h(2), '$\nu_T$ [m$^2 \mathbin{/}$ s]', 'interpreter', 'latex', 'fontsize', labelFontSize)
 
 
 
@@ -3083,11 +3079,11 @@ addPanelLabels(h, {'a', 'b'}, 'FontSize', labelFontSize, 'Offset', [0.02, 0.96])
 
 
 % Save figure
-% save_folder = '/Users/zeinsadek/Desktop/Experiments/Farm/SingleFarmPaper/MixingLayer';
-% fig_name = 'SingleFarm_MixingLayerScaling_Stress.pdf';
-% pause(3)
-% exportgraphics(fig, fullfile(save_folder, fig_name), 'resolution', 600)
-% close all
+save_folder = '/Users/zeinsadek/Desktop/Experiments/Farm/SingleFarmPaper/MixingLayer';
+fig_name = 'SingleFarm_MixingLayerScaling_Stress.pdf';
+pause(3)
+exportgraphics(fig, fullfile(save_folder, fig_name), 'resolution', 600)
+close all
 
 
 

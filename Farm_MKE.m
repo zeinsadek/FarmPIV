@@ -982,7 +982,7 @@ set(gca,'ytick',[])
 box on
 
 % Legend
-leg = legend({'$\langle \mathcal{P}_{x} \rangle$', '$\langle \mathcal{P}_{z} \rangle$'}, 'box', 'off', ...
+leg = legend({'$\langle -\mathcal{P}_{x} \rangle$', '$\langle -\mathcal{P}_{z} \rangle$'}, 'box', 'off', ...
              'orientation', 'vertical', 'interpreter', 'latex', ...
              'location', 'east', 'fontsize', legendFontSize);
 leg.IconColumnWidth = legendIconWidth;
@@ -1092,13 +1092,13 @@ xlim([-12 / normalized, 12 / normalized])
 
 
 % Save figure
-clc; 
-save_folder = '/Users/zeinsadek/Desktop/Experiments/Farm/SingleFarmPaper/MKE';
-figure_name = 'SingleFarmPaper_MKE_Terms_Normalized.pdf';
-pause(3)
-fprintf('Saving figure...\n')
-exportgraphics(fig, fullfile(save_folder, figure_name), 'resolution', 600)
-clc; fprintf('Figure Saved!\n')
+% clc; 
+% save_folder = '/Users/zeinsadek/Desktop/Experiments/Farm/SingleFarmPaper/MKE';
+% figure_name = 'SingleFarmPaper_MKE_Terms_Normalized.pdf';
+% pause(3)
+% fprintf('Saving figure...\n')
+% exportgraphics(fig, fullfile(save_folder, figure_name), 'resolution', 600)
+% clc; fprintf('Figure Saved!\n')
 
 
 
